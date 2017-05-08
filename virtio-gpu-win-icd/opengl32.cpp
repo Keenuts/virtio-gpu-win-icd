@@ -1,4 +1,7 @@
+#include <functional>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string>
 #include <windef.h>
 #include <WinBase.h>
 #include <winnt.h>
@@ -6,48 +9,81 @@
 #include "GLtypes.h"
 #include "winTypes.h"
 
-HMODULE loadGDI()
+#define TRANSFER_FUNCTION "D3DKMTEnumAdapters"
+
+//static
+LONG (*getGDIFunction(LPCSTR procName))(_Inout_ const void*)
 {
-	return NULL;
+	static HMODULE lib = NULL;
+	if (lib == NULL)
+		lib = LoadLibrary("gdi32.dll");
+	return (LONG(*)(_Inout_ const void*))GetProcAddress(lib, procName);
+}
+
+// From Oracle blog GNU HASH for elf symbols
+static UINT32 gnu_hash(const char* s) {
+	UINT32 h = 5381;
+	for (UCHAR c = *s; c != 0; c = *s++)
+		h = h * 33 + c;
+	return h;
+}
+
+static void sendCommand(const char *name, void *payload = NULL, UINT32 size = 0)
+{
+	void *command = new BYTE[sizeof(UINT32) + size];
+
+	UINT32 *head = (UINT32*)command;
+	*head = gnu_hash(name);
+
+	if (size > 0)
+		memcpy(head + 1, payload, size);
+	//TODO: Implement this function on the kernel side
+	//getGDIFunction(TRANSFER_FUNCTION)(command);
+	delete command;
+
 }
 
 void WINAPI glBegin(GLenum mode )
 {
-	UNREFERENCED_PARAMETER(mode);
+	sendCommand(__FUNCTION__, &mode, sizeof(mode));
 }
 
 void WINAPI glClear( GLbitfield mask )
 {
-	UNREFERENCED_PARAMETER(mask);
+	sendCommand(__FUNCTION__, &mask, sizeof(mask));
 }
 
-void WINAPI glColor3f( GLfloat r, GLfloat b, GLfloat c )
+void WINAPI glColor3f( GLfloat r, GLfloat g, GLfloat b)
 {
-	UNREFERENCED_PARAMETER(r);
-	UNREFERENCED_PARAMETER(b);
-	UNREFERENCED_PARAMETER(c);
+	GLfloat data[] = { r, g, b };
+	sendCommand(__FUNCTION__, data, sizeof(data));
 }
 
 void WINAPI glEnd(void)
 {
+	sendCommand(__FUNCTION__);
 }
 
 void WINAPI glFlush(void)
 {
+	sendCommand(__FUNCTION__);
 }
 
 void WINAPI glVertex2i( GLint x, GLint y )
 {
-	UNREFERENCED_PARAMETER(x);
-	UNREFERENCED_PARAMETER(y);
+	GLint data[] = { x, y };
+	sendCommand(__FUNCTION__, data, sizeof(data));
 }
 
-void WINAPI glViewport( GLint x, GLint y, unsigned int width, unsigned int height )
+struct viewport_data_t {
+	GLint x, y;
+	GLsizei width, height;
+};
+
+void WINAPI glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
-	UNREFERENCED_PARAMETER(x);
-	UNREFERENCED_PARAMETER(y);
-	UNREFERENCED_PARAMETER(width);
-	UNREFERENCED_PARAMETER(height);
+	viewport_data_t data = { x, y, width, height };
+	sendCommand(__FUNCTION__, &data, sizeof(data));
 }
 
 HGLRC WINAPI wglCreateContext(HDC hdc)
@@ -71,7 +107,7 @@ BOOL WINAPI wglDeleteContext(HGLRC hglrc)
 
 BOOL WINAPI wglChoosePixelFormat(HDC hdc, const PIXELFORMATDESCRIPTOR *ppfd)
 {
-	//DebugBreak();
+	//Setting up a dummy pixel format to pass validation
 	PIXELFORMATDESCRIPTOR descriptor;
 	descriptor.nSize = 0x28;
 	descriptor.nVersion = 0x1;
@@ -86,7 +122,6 @@ BOOL WINAPI wglChoosePixelFormat(HDC hdc, const PIXELFORMATDESCRIPTOR *ppfd)
 
 int WINAPI wglDescribePixelFormat(HDC hdc, int iPixelFormat, UINT nBytes, PPIXELFORMATDESCRIPTOR ppfd)
 {
-	//DebugBreak();
 	UNREFERENCED_PARAMETER(hdc);
 	UNREFERENCED_PARAMETER(iPixelFormat);
 	UNREFERENCED_PARAMETER(nBytes);

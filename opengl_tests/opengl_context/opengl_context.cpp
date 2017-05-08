@@ -111,6 +111,7 @@ CreateOpenGLWindow(char* title, int x, int y, int width, int height,
 	pfd.cColorBits = 32;
 
 	pf = ChoosePixelFormat(hDC, &pfd);
+	
 	if (pf == 0) {
 		MessageBox(NULL, "ChoosePixelFormat() failed:  "
 			"Cannot find a suitable pixel format.", "Error", MB_OK);

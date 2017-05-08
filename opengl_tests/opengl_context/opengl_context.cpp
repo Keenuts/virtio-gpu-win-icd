@@ -67,6 +67,8 @@ CreateOpenGLWindow(char* title, int x, int y, int width, int height,
 	WNDCLASS    wc;
 	PIXELFORMATDESCRIPTOR pfd;
 	static HINSTANCE hInstance = 0;
+	const char* err1 = "RegisterClass() failed : Cannot register window class.";
+	const char* err2 = "CreateWindow() failed : Cannot create a window.";
 
 	/* only register the window class once - use hInstance as a flag. */
 	if (!hInstance) {
@@ -80,22 +82,20 @@ CreateOpenGLWindow(char* title, int x, int y, int width, int height,
 		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 		wc.hbrBackground = NULL;
 		wc.lpszMenuName = NULL;
-		wc.lpszClassName = (LPCWSTR)"OpenGL";
+		wc.lpszClassName = "OpenGL";
 
 		if (!RegisterClass(&wc)) {
-			MessageBox(NULL, (LPCWSTR)"RegisterClass() failed:  "
-				"Cannot register window class.", (LPCWSTR)"Error", MB_OK);
+			MessageBox(NULL, err1, "Error", MB_OK);
 			return NULL;
 		}
 	}
 
-	hWnd = CreateWindow((LPCWSTR)"OpenGL", (LPCWSTR)title, WS_OVERLAPPEDWINDOW |
+	hWnd = CreateWindow("OpenGL", title, WS_OVERLAPPEDWINDOW |
 		WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
 		x, y, width, height, NULL, NULL, hInstance, NULL);
 
 	if (hWnd == NULL) {
-		MessageBox(NULL, (LPCWSTR)"CreateWindow() failed:  Cannot create a window.",
-			(LPCWSTR)"Error", MB_OK);
+		MessageBox(NULL, err2, "Error", MB_OK);
 		return NULL;
 	}
 
@@ -112,14 +112,14 @@ CreateOpenGLWindow(char* title, int x, int y, int width, int height,
 
 	pf = ChoosePixelFormat(hDC, &pfd);
 	if (pf == 0) {
-		MessageBox(NULL, (LPCWSTR)"ChoosePixelFormat() failed:  "
-			"Cannot find a suitable pixel format.", (LPCWSTR)"Error", MB_OK);
+		MessageBox(NULL, "ChoosePixelFormat() failed:  "
+			"Cannot find a suitable pixel format.", "Error", MB_OK);
 		return 0;
 	}
 
 	if (SetPixelFormat(hDC, pf, &pfd) == FALSE) {
-		MessageBox(NULL, (LPCWSTR)"SetPixelFormat() failed:  "
-			"Cannot set format specified.", (LPCWSTR)"Error", MB_OK);
+		MessageBox(NULL, "SetPixelFormat() failed:  "
+			"Cannot set format specified.", "Error", MB_OK);
 		return 0;
 	}
 

@@ -1,81 +1,133 @@
 #include <stdio.h>
-#include "GLtypes.h"
-
 #include <windef.h>
+#include <WinBase.h>
 #include <winnt.h>
 
-void __cdecl glBegin(GLenum mode )
+#include "GLtypes.h"
+#include "winTypes.h"
+
+void WINAPI glBegin(GLenum mode )
 {
+	DebugBreak();
+	printf( "Calling %s\n", __FUNCTION__);
+	
 	UNREFERENCED_PARAMETER(mode);
-
-	printf("Calling %s\n", __FUNCTION__);
 }
 
-void __cdecl glClear( GLbitfield mask )
+void WINAPI glClear( GLbitfield mask )
 {
+	DebugBreak();
+	printf( "Calling %s\n", __FUNCTION__);
+
 	UNREFERENCED_PARAMETER(mask);
-
-	printf("Calling %s\n", __FUNCTION__);
 }
 
-void __cdecl glColor3f( GLfloat r, GLfloat b, GLfloat c )
+void WINAPI glColor3f( GLfloat r, GLfloat b, GLfloat c )
 {
+	DebugBreak();
+	printf( "Calling %s\n", __FUNCTION__);
+	
 	UNREFERENCED_PARAMETER(r);
 	UNREFERENCED_PARAMETER(b);
 	UNREFERENCED_PARAMETER(c);
-
-	printf("Calling %s\n", __FUNCTION__);
 }
 
-void __cdecl glEnd(void)
+void WINAPI glEnd(void)
 {
-	printf("Calling %s\n", __FUNCTION__);
+	DebugBreak();
+	printf( "Calling %s\n", __FUNCTION__);
 }
 
-void __cdecl glFlush(void)
+void WINAPI glFlush(void)
 {
-	printf("Calling %s\n", __FUNCTION__);
+	DebugBreak();
+	printf( "Calling %s\n", __FUNCTION__);
 }
 
-void __cdecl glVertex2i( GLint x, GLint y )
+void WINAPI glVertex2i( GLint x, GLint y )
 {
+	DebugBreak();
+	printf( "Calling %s\n", __FUNCTION__);
+
 	UNREFERENCED_PARAMETER(x);
 	UNREFERENCED_PARAMETER(y);
-
-	printf("Calling %s\n", __FUNCTION__);
 }
 
-void __cdecl glViewport( GLint x, GLint y, unsigned int width, unsigned int height )
+void WINAPI glViewport( GLint x, GLint y, unsigned int width, unsigned int height )
 {
+	DebugBreak();
+	printf( "Calling %s\n", __FUNCTION__);
+
 	UNREFERENCED_PARAMETER(x);
 	UNREFERENCED_PARAMETER(y);
 	UNREFERENCED_PARAMETER(width);
 	UNREFERENCED_PARAMETER(height);
-
-	printf("Calling %s\n", __FUNCTION__);
 }
 
-HGLRC __cdecl wglCreateContext(HDC hdc)
+HGLRC WINAPI wglCreateContext(HDC hdc)
 {
+	DebugBreak();
+	printf( "Calling %s\n", __FUNCTION__);
+
 	UNREFERENCED_PARAMETER(hdc);
-	printf("Calling %s\n", __FUNCTION__);
-	int *ptr = NULL;
-	int value = *ptr;
-	(void)value;
 	return NULL;
 }
 
-BOOL __cdecl wglMakeCurrent(HDC hdc, HGLRC hglrc)
+BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
 {
+	DebugBreak();
+	printf( "Calling %s\n", __FUNCTION__);
+
 	UNREFERENCED_PARAMETER(hdc);
 	UNREFERENCED_PARAMETER(hglrc);
-	printf("Calling %s\n", __FUNCTION__);
 	return TRUE;
 }
 
-BOOL __cdecl wglDeleteContext(HGLRC hglrc)
+BOOL WINAPI wglDeleteContext(HGLRC hglrc)
 {
+	DebugBreak();
+	printf( "Calling %s\n", __FUNCTION__);
+
 	UNREFERENCED_PARAMETER(hglrc);
-	printf("Calling %s\n", __FUNCTION__);
+	return TRUE;
+}
+
+BOOL WINAPI wglChoosePixelFormat(HDC hdc, const PIXELFORMATDESCRIPTOR *ppfd)
+{
+	DebugBreak();
+	printf( "Calling %s\n", __FUNCTION__);
+	
+	UNREFERENCED_PARAMETER(hdc);
+	UNREFERENCED_PARAMETER(ppfd);
+
+	PIXELFORMATDESCRIPTOR descriptor;
+	descriptor.nSize = 0x28;
+	descriptor.nVersion = 0x1;
+	descriptor.dwFlags = 0x24;
+	descriptor.cColorBits = 0x20;
+
+	memcpy((void*)ppfd, &descriptor, sizeof(descriptor));
+	return TRUE;
+}
+
+int WINAPI wglDescribePixelFormat(HDC hdc, int iPixelFormat)
+{
+	DebugBreak();
+	printf( "Calling %s\n", __FUNCTION__);
+
+	UNREFERENCED_PARAMETER(hdc);
+	UNREFERENCED_PARAMETER(iPixelFormat);
+	return 16;
+}
+
+BOOL WINAPI wglSetPixelFormat(HDC hdc, int iPixelFormat, const PIXELFORMATDESCRIPTOR *ppfd)
+{
+	DebugBreak();
+	printf( "Calling %s\n", __FUNCTION__);
+
+	UNREFERENCED_PARAMETER(hdc);
+	UNREFERENCED_PARAMETER(iPixelFormat);
+	UNREFERENCED_PARAMETER(ppfd);
+
 	return TRUE;
 }

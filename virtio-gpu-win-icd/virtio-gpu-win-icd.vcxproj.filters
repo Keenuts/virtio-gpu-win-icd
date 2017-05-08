@@ -21,6 +21,9 @@
     <ClInclude Include="GLtypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="winTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="opengl32.cpp">

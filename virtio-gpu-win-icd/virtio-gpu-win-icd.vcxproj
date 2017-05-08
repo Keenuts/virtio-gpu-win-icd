@@ -37,6 +37,7 @@
   <ItemGroup>
     <ClInclude Include="GLtypes.h" />
     <ClInclude Include="opengl32.h" />
+    <ClInclude Include="winTypes.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="opengl32.cpp" />
@@ -117,6 +118,7 @@
     <Link>
       <Version>1.0</Version>
       <ModuleDefinitionFile>info.def</ModuleDefinitionFile>
+      <AssemblyDebug>true</AssemblyDebug>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

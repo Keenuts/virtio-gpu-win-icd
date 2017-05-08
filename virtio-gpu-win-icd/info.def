@@ -3,6 +3,9 @@ EXPORTS
 	wglCreateContext
 	wglMakeCurrent
 	wglDeleteContext
+	wglChoosePixelFormat
+	wglDescribePixelFormat
+	wglSetPixelFormat
 	glBegin
 	glClear
 	glColor3f

@@ -1,0 +1,12 @@
+LIBRARY opengl32.dll
+EXPORTS
+	wglCreateContext
+	wglMakeCurrent
+	wglDeleteContext
+	glBegin
+	glClear
+	glColor3f
+	glEnd
+	glFlush
+	glVertex2i
+	glViewport

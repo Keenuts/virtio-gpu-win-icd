@@ -120,6 +120,9 @@
       <ModuleDefinitionFile>info.def</ModuleDefinitionFile>
       <AssemblyDebug>true</AssemblyDebug>
     </Link>
+    <PostBuildEvent>
+      <Command>$(SolutionDir)\deploy.bat</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

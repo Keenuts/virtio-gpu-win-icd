@@ -6,27 +6,23 @@
 #include "GLtypes.h"
 #include "winTypes.h"
 
+HMODULE loadGDI()
+{
+	return NULL;
+}
+
 void WINAPI glBegin(GLenum mode )
 {
-	DebugBreak();
-	printf( "Calling %s\n", __FUNCTION__);
-	
 	UNREFERENCED_PARAMETER(mode);
 }
 
 void WINAPI glClear( GLbitfield mask )
 {
-	DebugBreak();
-	printf( "Calling %s\n", __FUNCTION__);
-
 	UNREFERENCED_PARAMETER(mask);
 }
 
 void WINAPI glColor3f( GLfloat r, GLfloat b, GLfloat c )
 {
-	DebugBreak();
-	printf( "Calling %s\n", __FUNCTION__);
-	
 	UNREFERENCED_PARAMETER(r);
 	UNREFERENCED_PARAMETER(b);
 	UNREFERENCED_PARAMETER(c);
@@ -34,30 +30,20 @@ void WINAPI glColor3f( GLfloat r, GLfloat b, GLfloat c )
 
 void WINAPI glEnd(void)
 {
-	DebugBreak();
-	printf( "Calling %s\n", __FUNCTION__);
 }
 
 void WINAPI glFlush(void)
 {
-	DebugBreak();
-	printf( "Calling %s\n", __FUNCTION__);
 }
 
 void WINAPI glVertex2i( GLint x, GLint y )
 {
-	DebugBreak();
-	printf( "Calling %s\n", __FUNCTION__);
-
 	UNREFERENCED_PARAMETER(x);
 	UNREFERENCED_PARAMETER(y);
 }
 
 void WINAPI glViewport( GLint x, GLint y, unsigned int width, unsigned int height )
 {
-	DebugBreak();
-	printf( "Calling %s\n", __FUNCTION__);
-
 	UNREFERENCED_PARAMETER(x);
 	UNREFERENCED_PARAMETER(y);
 	UNREFERENCED_PARAMETER(width);
@@ -66,18 +52,12 @@ void WINAPI glViewport( GLint x, GLint y, unsigned int width, unsigned int heigh
 
 HGLRC WINAPI wglCreateContext(HDC hdc)
 {
-	DebugBreak();
-	printf( "Calling %s\n", __FUNCTION__);
-
 	UNREFERENCED_PARAMETER(hdc);
 	return NULL;
 }
 
 BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
 {
-	DebugBreak();
-	printf( "Calling %s\n", __FUNCTION__);
-
 	UNREFERENCED_PARAMETER(hdc);
 	UNREFERENCED_PARAMETER(hglrc);
 	return TRUE;
@@ -85,21 +65,13 @@ BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
 
 BOOL WINAPI wglDeleteContext(HGLRC hglrc)
 {
-	DebugBreak();
-	printf( "Calling %s\n", __FUNCTION__);
-
 	UNREFERENCED_PARAMETER(hglrc);
 	return TRUE;
 }
 
 BOOL WINAPI wglChoosePixelFormat(HDC hdc, const PIXELFORMATDESCRIPTOR *ppfd)
 {
-	DebugBreak();
-	printf( "Calling %s\n", __FUNCTION__);
-	
-	UNREFERENCED_PARAMETER(hdc);
-	UNREFERENCED_PARAMETER(ppfd);
-
+	//DebugBreak();
 	PIXELFORMATDESCRIPTOR descriptor;
 	descriptor.nSize = 0x28;
 	descriptor.nVersion = 0x1;
@@ -107,24 +79,24 @@ BOOL WINAPI wglChoosePixelFormat(HDC hdc, const PIXELFORMATDESCRIPTOR *ppfd)
 	descriptor.cColorBits = 0x20;
 
 	memcpy((void*)ppfd, &descriptor, sizeof(descriptor));
+
+	UNREFERENCED_PARAMETER(hdc);
 	return TRUE;
 }
 
-int WINAPI wglDescribePixelFormat(HDC hdc, int iPixelFormat)
+int WINAPI wglDescribePixelFormat(HDC hdc, int iPixelFormat, UINT nBytes, PPIXELFORMATDESCRIPTOR ppfd)
 {
-	DebugBreak();
-	printf( "Calling %s\n", __FUNCTION__);
-
+	//DebugBreak();
 	UNREFERENCED_PARAMETER(hdc);
 	UNREFERENCED_PARAMETER(iPixelFormat);
+	UNREFERENCED_PARAMETER(nBytes);
+	UNREFERENCED_PARAMETER(ppfd);
 	return 16;
 }
 
 BOOL WINAPI wglSetPixelFormat(HDC hdc, int iPixelFormat, const PIXELFORMATDESCRIPTOR *ppfd)
 {
-	DebugBreak();
-	printf( "Calling %s\n", __FUNCTION__);
-
+	//DebugBreak();
 	UNREFERENCED_PARAMETER(hdc);
 	UNREFERENCED_PARAMETER(iPixelFormat);
 	UNREFERENCED_PARAMETER(ppfd);

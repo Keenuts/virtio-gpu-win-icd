@@ -47,7 +47,7 @@ static UINT32 gnu_hash(const char* s) {
 	return h;
 }
 
-static void sendCommand(const char *name, void *payload = NULL, UINT32 size = 0)
+static void sendCommand(const char *name, void *payload, UINT32 size)
 {
 	static bool initialized = false;
 	static device_info_t info;
@@ -102,12 +102,12 @@ void WINAPI glColor3f( GLfloat r, GLfloat g, GLfloat b)
 
 void WINAPI glEnd(void)
 {
-	sendCommand(__FUNCTION__);
+	sendCommand(__FUNCTION__, NULL, 0);
 }
 
 void WINAPI glFlush(void)
 {
-	sendCommand(__FUNCTION__);
+	sendCommand(__FUNCTION__, NULL, 0);
 }
 
 void WINAPI glVertex2i( GLint x, GLint y )
@@ -129,12 +129,13 @@ void WINAPI glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 
 HGLRC WINAPI wglCreateContext(HDC hdc)
 {
-	UNREFERENCED_PARAMETER(hdc);
+	sendCommand(__FUNCTION__, &hdc, sizeof(HDC));
 	return NULL;
 }
 
 BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
 {
+	//FIXME
 	UNREFERENCED_PARAMETER(hdc);
 	UNREFERENCED_PARAMETER(hglrc);
 	return TRUE;
@@ -142,12 +143,14 @@ BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
 
 BOOL WINAPI wglDeleteContext(HGLRC hglrc)
 {
+	sendCommand(__FUNCTION__, &hglrc, sizeof(HDC));
 	UNREFERENCED_PARAMETER(hglrc);
 	return TRUE;
 }
 
 BOOL WINAPI wglChoosePixelFormat(HDC hdc, const PIXELFORMATDESCRIPTOR *ppfd)
 {
+	//FIXME
 	//Setting up a dummy pixel format to pass validation
 	PIXELFORMATDESCRIPTOR descriptor;
 	descriptor.nSize = 0x28;
@@ -163,6 +166,7 @@ BOOL WINAPI wglChoosePixelFormat(HDC hdc, const PIXELFORMATDESCRIPTOR *ppfd)
 
 int WINAPI wglDescribePixelFormat(HDC hdc, int iPixelFormat, UINT nBytes, PPIXELFORMATDESCRIPTOR ppfd)
 {
+	//FIXME
 	UNREFERENCED_PARAMETER(hdc);
 	UNREFERENCED_PARAMETER(iPixelFormat);
 	UNREFERENCED_PARAMETER(nBytes);
@@ -172,7 +176,7 @@ int WINAPI wglDescribePixelFormat(HDC hdc, int iPixelFormat, UINT nBytes, PPIXEL
 
 BOOL WINAPI wglSetPixelFormat(HDC hdc, int iPixelFormat, const PIXELFORMATDESCRIPTOR *ppfd)
 {
-	//DebugBreak();
+	//FIXME
 	UNREFERENCED_PARAMETER(hdc);
 	UNREFERENCED_PARAMETER(iPixelFormat);
 	UNREFERENCED_PARAMETER(ppfd);

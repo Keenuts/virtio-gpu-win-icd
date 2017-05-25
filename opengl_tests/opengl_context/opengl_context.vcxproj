@@ -168,6 +168,11 @@
     <Image Include="opengl_context.ico" />
     <Image Include="small.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\virtio-gpu-win-icd\virtio-gpu-win-icd.vcxproj">
+      <Project>{cbcb59ec-dcdf-4d64-8754-8122bcac3a62}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -6,6 +6,7 @@
 #include <WinBase.h>
 #include <winnt.h>
 
+#include "opengl32.h"
 #include "GLtypes.h"
 #include "winTypes.h"
 

@@ -1,12 +1,28 @@
 #pragma once
 
-#include <gl/GL.h>
-#include <gl/GLU.h>
+#include <functional>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
+#include <windef.h>
+#include <WinBase.h>
+#include <winnt.h>
 
-// void glBegin(/* GLenum mode */);
-// void glClear(/* GLbitfield mask */);
-// void glColor3f(/* GLfloat r, GLfloat b, GLfloat c */);
-// void glEnd(void);
-// void glFlush(void);
-// void glVertex2i(/* GLint x, GLint y */);
-// void glViewport(/* GLint x, GLint y, GLint width, GLint height */);
+#include "GLtypes.h"
+#include "winTypes.h"
+
+#define EXPORT __declspec(dllexport)
+
+EXPORT void WINAPI glBegin(GLenum mode);
+EXPORT void WINAPI glClear(GLbitfield mask);
+EXPORT void WINAPI glColor3f(GLfloat r, GLfloat g, GLfloat b);
+EXPORT void WINAPI glEnd(void);
+EXPORT void WINAPI glFlush(void);
+EXPORT void WINAPI glVertex2i(GLint x, GLint y);
+EXPORT void WINAPI glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
+EXPORT HGLRC WINAPI wglCreateContext(HDC hdc);
+EXPORT BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc);
+EXPORT BOOL WINAPI wglDeleteContext(HGLRC hglrc);
+EXPORT BOOL WINAPI wglChoosePixelFormat(HDC hdc, const PIXELFORMATDESCRIPTOR *ppfd);
+EXPORT int WINAPI wglDescribePixelFormat(HDC hdc, int iPixelFormat, UINT nBytes, PPIXELFORMATDESCRIPTOR ppfd);
+EXPORT BOOL WINAPI wglSetPixelFormat(HDC hdc, int iPixelFormat, const PIXELFORMATDESCRIPTOR *ppfd);

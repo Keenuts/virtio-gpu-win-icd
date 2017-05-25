@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="opengl32.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="GLtypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="opengl32.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="winTypes.h">
@@ -29,10 +29,5 @@
     <ClCompile Include="opengl32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="info.def">
-      <Filter>Source Files</Filter>
-    </None>
   </ItemGroup>
 </Project>

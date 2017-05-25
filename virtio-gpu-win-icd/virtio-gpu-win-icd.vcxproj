@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GLtypes.h" />
+    <ClInclude Include="helper.h" />
     <ClInclude Include="opengl32.h" />
     <ClInclude Include="winTypes.h" />
   </ItemGroup>

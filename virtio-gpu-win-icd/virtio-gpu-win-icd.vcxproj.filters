@@ -30,4 +30,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="info.def">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>

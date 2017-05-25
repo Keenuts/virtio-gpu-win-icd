@@ -11,7 +11,7 @@
 #include "GLtypes.h"
 #include "winTypes.h"
 
-#define EXPORT __declspec(dllexport)
+#define EXPORT extern "C" __declspec(dllexport)
 
 EXPORT void WINAPI glBegin(GLenum mode);
 EXPORT void WINAPI glClear(GLbitfield mask);

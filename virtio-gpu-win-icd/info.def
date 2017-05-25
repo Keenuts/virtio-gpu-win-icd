@@ -1,15 +1,15 @@
 LIBRARY opengl32.dll
 EXPORTS
-	wglCreateContext
-	wglMakeCurrent
-	wglDeleteContext
-	wglChoosePixelFormat
-	wglDescribePixelFormat
-	wglSetPixelFormat
-	glBegin
-	glClear
-	glColor3f
-	glEnd
-	glFlush
-	glVertex2i
-	glViewport
+	wglCreateContext @346
+	wglMakeCurrent  @357
+	wglDeleteContext @348
+	wglChoosePixelFormat @344
+	wglDescribePixelFormat @350
+	wglSetPixelFormat @360
+	glBegin @11
+	glClear @17
+	glColor3f @28
+	glEnd @82
+	glFlush @98
+	glVertex2i @322
+	glViewport @343

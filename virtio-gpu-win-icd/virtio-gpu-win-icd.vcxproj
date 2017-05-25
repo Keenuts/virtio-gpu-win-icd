@@ -26,6 +26,9 @@
   <ItemGroup>
     <ClCompile Include="opengl32.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="info.def" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{632310DF-B68B-4B69-8DD8-9E693DEFE440}</ProjectGuid>
     <TemplateGuid>{5ce256cb-a826-4703-9b24-ad2d556ad23b}</TemplateGuid>
@@ -84,6 +87,11 @@
     <IncludePath>$(DDK_INC_PATH);$(IncludePath)</IncludePath>
     <TargetName>opengl32</TargetName>
   </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Link>
+      <ModuleDefinitionFile>info.def</ModuleDefinitionFile>
+    </Link>
+  </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

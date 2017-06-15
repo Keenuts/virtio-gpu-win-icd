@@ -92,6 +92,33 @@
     <Link>
       <ModuleDefinitionFile>info.def</ModuleDefinitionFile>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(OutputPath)opengl32.dll" "C:\Users\Nathan\.babun\cygwin\home\Nathan\Projects\virtio-gpu-win-icd\opengl_tests\opengl_context\x64\Debug\"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Link>
+      <ModuleDefinitionFile>info.def</ModuleDefinitionFile>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy "$(OutputPath)opengl32.dll" "C:\Users\Nathan\.babun\cygwin\home\Nathan\Projects\virtio-gpu-win-icd\opengl_tests\opengl_context\x64\Debug\"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Link>
+      <ModuleDefinitionFile>info.def</ModuleDefinitionFile>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy "$(OutputPath)opengl32.dll" "C:\Users\Nathan\.babun\cygwin\home\Nathan\Projects\virtio-gpu-win-icd\opengl_tests\opengl_context\x64\Release\"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Link>
+      <ModuleDefinitionFile>info.def</ModuleDefinitionFile>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy "$(OutputPath)opengl32.dll" "C:\Users\Nathan\.babun\cygwin\home\Nathan\Projects\virtio-gpu-win-icd\opengl_tests\opengl_context\x64\Release\"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

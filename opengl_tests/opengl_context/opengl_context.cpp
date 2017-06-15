@@ -7,6 +7,7 @@
 #include <GL/gl.h>			/* OpenGL header file */
 #include <GL/glu.h>			/* OpenGL utilities header file */
 #include <stdio.h>
+#include <assert.h>
 
 void
 display()
@@ -147,6 +148,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		exit(1);
 
 	hDC = GetDC(hWnd);
+	assert(hDC && "hDC context is null");
+
 	hRC = wglCreateContext(hDC);
 	wglMakeCurrent(hDC, hRC);
 

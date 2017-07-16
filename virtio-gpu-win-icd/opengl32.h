@@ -9,7 +9,6 @@
 #include <winnt.h>
 
 #include "GLtypes.h"
-#include "winTypes.h"
 
 #define EXPORT extern "C"
 

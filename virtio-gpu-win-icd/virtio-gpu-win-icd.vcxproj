@@ -19,13 +19,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="debug.h" />
+    <ClInclude Include="driver_api.h" />
     <ClInclude Include="GLtypes.h" />
     <ClInclude Include="helper.h" />
     <ClInclude Include="opengl32.h" />
-    <ClInclude Include="winTypes.h" />
+    <ClInclude Include="virgl.h" />
+    <ClInclude Include="virgl_command.h" />
+    <ClInclude Include="win_types.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="driver_api.cpp" />
     <ClCompile Include="opengl32.cpp" />
+    <ClCompile Include="virgl_command.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="info.def" />
@@ -64,6 +70,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>WindowsApplicationForDrivers10.0</PlatformToolset>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -117,8 +124,12 @@
       <ModuleDefinitionFile>info.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(OutputPath)opengl32.dll" "C:\Users\Nathan\.babun\cygwin\home\Nathan\Projects\virtio-gpu-win-icd\opengl_tests\opengl_context\x64\Release\"</Command>
+      <Command>copy "$(OutputPath)opengl32.dll" "C:\Users\Nathan\.babun\cygwin\home\Nathan\Projects\virtio-gpu-win-icd\opengl_tests\opengl_context\x64\Release\"
+copy "$(OutputPath)opengl32.dll" "C:\Users\Nathan\Desktop\WinJunk\opengl32.dll"</Command>
     </PostBuildEvent>
+    <ClCompile>
+      <CompileAsWinRT>false</CompileAsWinRT>
+    </ClCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

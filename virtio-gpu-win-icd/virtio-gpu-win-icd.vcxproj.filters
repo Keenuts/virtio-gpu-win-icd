@@ -24,12 +24,30 @@
     <ClInclude Include="helper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="winTypes.h">
+    <ClInclude Include="debug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="driver_api.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="win_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="virgl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="virgl_command.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="opengl32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="driver_api.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="virgl_command.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -26,11 +26,8 @@ namespace VirGL
         UINT32 cso;
     } VBO_SETTINGS, *PVBO_SETTINGS;
 
-    typedef struct _GPU_3D_CMD {
-        UINT32 command : 8;
-        UINT32 opt : 8;
-        UINT32 length : 16;
-    } GPU_3D_CMD, *PGPU_3D_CMD;
+    typedef UINT32 GPU_3D_CMD;
+    typedef GPU_3D_CMD* PGPU_3D_CMD;
 
     struct VirglCommandBuffer {
         std::vector<std::pair<GPU_3D_CMD, std::vector<UINT32>>> m_commands;

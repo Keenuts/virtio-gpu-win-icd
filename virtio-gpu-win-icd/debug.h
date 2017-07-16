@@ -10,16 +10,18 @@
 #define TRACE_LEVEL TRACE_LEVEL_INFO
 
 //Warning disabled: constant comparaison
-#define DbgPrint(Level, Line)                               \
-__pragma(warning(push))                                     \
-__pragma(warning(disable:4127))                             \
-    if ((Level) >= TRACE_LEVEL)                             \
-        printf Line;                                        \
-__pragma(warning(pop))                                      \
-    FlushFileBuffers(GetStdHandle(STD_OUTPUT_HANDLE));                                             \
+#define DbgPrint(Level, Line)                              \
+    do {                                                   \
+    __pragma(warning(push))                                \
+    __pragma(warning(disable:4127))                        \
+        if ((Level) >= TRACE_LEVEL)                        \
+            printf Line;                                   \
+    __pragma(warning(pop))                                 \
+        FlushFileBuffers(GetStdHandle(STD_OUTPUT_HANDLE)); \
+    } while (0)
 
 #define TRACE_IN() \
-    DbgPrint(TRACE_LEVEL_INFO, ("--> %s\n", __FUNCTION__));
+    DbgPrint(TRACE_LEVEL_INFO, ("--> %s\n", __FUNCTION__))
 
 #define TRACE_OUT() \
-    DbgPrint(TRACE_LEVEL_INFO, ("<-- %s\n", __FUNCTION__));
+    DbgPrint(TRACE_LEVEL_INFO, ("<-- %s\n", __FUNCTION__))

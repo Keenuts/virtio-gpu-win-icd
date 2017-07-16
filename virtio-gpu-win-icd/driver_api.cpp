@@ -1,6 +1,7 @@
 #include <cassert>
 
 #include "debug.h"
+#include "virgl.h"
 #include "virgl_command.h"
 #include "win_types.h"
 
@@ -94,10 +95,26 @@ void sendCommand(void *command, UINT32 size)
 	escape_info.privateDriverData = command;
 	escape_info.privateDriverDataSize = size;
 
+#define SEND_KERNEL 1
+#if SEND_KERNEL
     res = info.escape(&escape_info);
+#else
+    res = STATUS_SUCCESS;
+
+    PGPU_SUBMIT_3D cmd = (PGPU_SUBMIT_3D)escape_info.privateDriverData;
+
+    if (cmd->hdr.type == VIRTIO_GPU_CMD_SUBMIT_3D) {
+        const UINT32 skip = sizeof(GPU_SUBMIT_3D) / sizeof(UINT32);
+        DbgPrint(TRACE_LEVEL_INFO, ("virgl_cmd_submit_3d: | buffer size=%zu\n", escape_info.privateDriverDataSize / sizeof(UINT32) - skip));
+        for (UINT32 i = skip; i < escape_info.privateDriverDataSize / sizeof(UINT32); i++)
+            DbgPrint(TRACE_LEVEL_INFO, ("virgl_cmd_submit_3d: | buffer[%d]=0x%x\n", i, ((UINT32*)escape_info.privateDriverData)[i]));
+    }
+
+    DbgPrint(TRACE_LEVEL_INFO, ("[?] Sending a buffer to kernel: size=%u\n", escape_info.privateDriverDataSize));
+#endif
+
     if (res != STATUS_SUCCESS)
         DbgPrint(TRACE_LEVEL_ERROR, ("[!] %s: Escape returned with error 0x%x (%s)\n", __FUNCTION__, res, status2str(res)));
     assert(res == STATUS_SUCCESS);
-
     DbgPrint(TRACE_LEVEL_INFO, ("<-- %s.\n", __FUNCTION__));
 }

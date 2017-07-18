@@ -86,7 +86,7 @@ def main():
 
 
   if len(args) == 0:
-    print("Usage: %s <filename> ..." % sys.argv[0])
+    print("Usage: ./main.py <filename> ...")
   else:
     count = len(args)
     passed = 0
@@ -110,6 +110,9 @@ def main():
         count -= 1
       except json.decoder.JSONDecodeError as e:
         print("[!] Invalid JSON '%s':%s.\n[!] File removed from count." % (a, e))
+        count -= 1
+      except PermissionError:
+        print("[!] Cannot open the file '%s'.\n[!] File removed from count." % a)
         count -= 1
 
     if verbose:

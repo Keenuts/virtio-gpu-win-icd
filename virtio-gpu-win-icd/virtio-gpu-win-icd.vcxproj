@@ -24,6 +24,7 @@
     <ClInclude Include="GLtypes.h" />
     <ClInclude Include="helper.h" />
     <ClInclude Include="opengl32.h" />
+    <ClInclude Include="tests.h" />
     <ClInclude Include="virgl.h" />
     <ClInclude Include="virgl_command.h" />
     <ClInclude Include="win_types.h" />
@@ -31,6 +32,7 @@
   <ItemGroup>
     <ClCompile Include="driver_api.cpp" />
     <ClCompile Include="opengl32.cpp" />
+    <ClCompile Include="tests.cpp" />
     <ClCompile Include="virgl_command.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -116,7 +118,7 @@
       <ModuleDefinitionFile>info.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(OutputPath)opengl32.dll" "C:\Users\Nathan\.babun\cygwin\home\Nathan\Projects\virtio-gpu-win-icd\opengl_tests\opengl_context\x64\Release\"</Command>
+      <Command>copy "$(OutputPath)opengl32.dll" $(SolutionDir)\..\opengl_tests\opengl_context\x86\Release\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -124,8 +126,10 @@
       <ModuleDefinitionFile>info.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(OutputPath)opengl32.dll" "C:\Users\Nathan\.babun\cygwin\home\Nathan\Projects\virtio-gpu-win-icd\opengl_tests\opengl_context\x64\Release\"
-copy "$(OutputPath)opengl32.dll" "C:\Users\Nathan\Desktop\WinJunk\opengl32.dll"</Command>
+      <Command>
+copy "$(OutputPath)opengl32.dll" "C:\Users\Nathan\Desktop\WinJunk\opengl32.dll"
+copy "$(OutputPath)opengl32.dll" $(SolutionDir)\..\opengl_tests\opengl_context\x64\Release\"
+copy "$(OutputPath)opengl32.dll" $(SolutionDir)\..\tests\"</Command>
     </PostBuildEvent>
     <ClCompile>
       <CompileAsWinRT>false</CompileAsWinRT>

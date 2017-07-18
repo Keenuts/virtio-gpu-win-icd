@@ -1,0 +1,10 @@
+{
+	"name": "Simple 1",
+	"commands": [
+		["wglCreateContext", 1]
+	],
+	"expected": [
+		["CTX_CREATE", "1"],
+		["SUBMIT_3D", "CREATE_SUB_CTX", 1]
+	]
+}

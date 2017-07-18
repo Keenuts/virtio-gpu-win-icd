@@ -1,6 +1,7 @@
 #include <cassert>
 
 #include "debug.h"
+#include "tests.h"
 #include "virgl.h"
 #include "virgl_command.h"
 #include "win_types.h"
@@ -45,12 +46,15 @@ static const char* status2str(NTSTATUS status)
 
 static void initialize_device(device_info_t *info) {
 	NTSTATUS res;
-    FILE *com_fd;
 	D3DKMT_ENUMADAPTERS adapters;
 	PFND3DKMT_ENUMADAPTERS enum_adapter;
     PFND3DKMT_ESCAPE escape;
 
-    assert(freopen_s(&com_fd, "COM2:", "w", stdout) == 0);
+    if (!Tests::test_enabled) {
+        FILE *com_fd;
+        assert(freopen_s(&com_fd, "COM2:", "w", stdout) == 0);
+    }
+
     DbgPrint(TRACE_LEVEL_INFO, ("[?] Starting ICD Build on %s %s: .\n", __DATE__, __TIME__));
 
 	enum_adapter = getGDIFunction<PFND3DKMT_ENUMADAPTERS>("D3DKMTEnumAdapters");
@@ -63,6 +67,7 @@ static void initialize_device(device_info_t *info) {
     assert(res == STATUS_SUCCESS && adapters.count > 0);
 
 	info->adapter = adapters.adapters[0].handle;
+#include "win_types.h"
     info->escape = escape;
 
     DbgPrint(TRACE_LEVEL_INFO, ("[?] ICD Initialized.\n"));
@@ -81,7 +86,7 @@ void sendCommand(void *command, UINT32 size)
 	if (!initialized) {
 		initialize_device(&info);
 		initialized = true;
-        VirGL::printHost("[?] Initializing OpenGL ICD\n");
+        VirGL::printHost("[?] Initialization done for OpenGL ICD\n");
 	}
 
     if (!command)
@@ -95,23 +100,13 @@ void sendCommand(void *command, UINT32 size)
 	escape_info.privateDriverData = command;
 	escape_info.privateDriverDataSize = size;
 
-#define SEND_KERNEL 1
-#if SEND_KERNEL
-    res = info.escape(&escape_info);
-#else
-    res = STATUS_SUCCESS;
-
-    PGPU_SUBMIT_3D cmd = (PGPU_SUBMIT_3D)escape_info.privateDriverData;
-
-    if (cmd->hdr.type == VIRTIO_GPU_CMD_SUBMIT_3D) {
-        const UINT32 skip = sizeof(GPU_SUBMIT_3D) / sizeof(UINT32);
-        DbgPrint(TRACE_LEVEL_INFO, ("virgl_cmd_submit_3d: | buffer size=%zu\n", escape_info.privateDriverDataSize / sizeof(UINT32) - skip));
-        for (UINT32 i = skip; i < escape_info.privateDriverDataSize / sizeof(UINT32); i++)
-            DbgPrint(TRACE_LEVEL_INFO, ("virgl_cmd_submit_3d: | buffer[%d]=0x%x\n", i, ((UINT32*)escape_info.privateDriverData)[i]));
+    if (Tests::test_enabled) {
+        Tests::dumpCommandBuffer(escape_info.privateDriverData, escape_info.privateDriverDataSize);
+        res = STATUS_SUCCESS;
     }
-
-    DbgPrint(TRACE_LEVEL_INFO, ("[?] Sending a buffer to kernel: size=%u\n", escape_info.privateDriverDataSize));
-#endif
+    else {
+        res = info.escape(&escape_info);
+    }
 
     if (res != STATUS_SUCCESS)
         DbgPrint(TRACE_LEVEL_ERROR, ("[!] %s: Escape returned with error 0x%x (%s)\n", __FUNCTION__, res, status2str(res)));

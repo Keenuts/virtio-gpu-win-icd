@@ -13,3 +13,6 @@ EXPORTS
 	glFlush @98
 	glVertex2i @322
 	glViewport @343
+
+    finish_tests @998
+	initialize_test_mode @999

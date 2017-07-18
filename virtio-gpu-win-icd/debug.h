@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <stdio.h>
 
 #define TRACE_LEVEL_INFO 0
@@ -7,7 +8,7 @@
 #define TRACE_LEVEL_ERROR 2
 #define TRACE_LEVEL_SEVERE 3
 
-#define TRACE_LEVEL TRACE_LEVEL_INFO
+#define TRACE_LEVEL TRACE_LEVEL_SEVERE
 
 //Warning disabled: constant comparaison
 #define DbgPrint(Level, Line)                              \

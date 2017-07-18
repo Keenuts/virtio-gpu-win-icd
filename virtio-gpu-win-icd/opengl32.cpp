@@ -12,7 +12,6 @@
 #include "virgl_command.h"
 #include "win_types.h"
 
-
 void WINAPI glBegin(GLenum mode )
 {
     TRACE_IN();
@@ -85,9 +84,7 @@ HGLRC WINAPI wglCreateContext(HDC hdc)
     cmd.createSubContext(1);
     cmd.submitCommandBuffer();
 
-    VirGL::deleteContext(DEFAULT_VGL_CTX);
 
-    STOP();
     TRACE_OUT();
 	return NULL;
 }
@@ -95,9 +92,13 @@ HGLRC WINAPI wglCreateContext(HDC hdc)
 BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
 {
     TRACE_IN();
-	//FIXME
-	UNREFERENCED_PARAMETER(hdc);
-	UNREFERENCED_PARAMETER(hglrc);
+
+    UNREFERENCED_PARAMETER(hdc);
+    UNREFERENCED_PARAMETER(hglrc);
+
+    VirGL::VirglCommandBuffer cmd(DEFAULT_VGL_CTX);
+    cmd.setCurrentSubContext(1);
+    cmd.submitCommandBuffer();
 
 
     TRACE_OUT();
@@ -107,7 +108,9 @@ BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
 BOOL WINAPI wglDeleteContext(HGLRC hglrc)
 {
     TRACE_IN();
+
     UNREFERENCED_PARAMETER(hglrc);
+    VirGL::deleteContext(DEFAULT_VGL_CTX);
 
     TRACE_OUT();
 	return TRUE;

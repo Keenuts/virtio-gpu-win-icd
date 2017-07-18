@@ -3,12 +3,13 @@
 #include <cassert>
 #include <stdio.h>
 
-#define TRACE_LEVEL_INFO 0
-#define TRACE_LEVEL_WARNING 1
-#define TRACE_LEVEL_ERROR 2
-#define TRACE_LEVEL_SEVERE 3
+#define TRACE_LEVEL_VERBOSE 0
+#define TRACE_LEVEL_INFO 1
+#define TRACE_LEVEL_WARNING 2
+#define TRACE_LEVEL_ERROR 3
+#define TRACE_LEVEL_SEVERE 4
 
-#define TRACE_LEVEL TRACE_LEVEL_SEVERE
+#define TRACE_LEVEL TRACE_LEVEL_WARNING
 
 //Warning disabled: constant comparaison
 #define DbgPrint(Level, Line)                              \
@@ -22,7 +23,7 @@
     } while (0)
 
 #define TRACE_IN() \
-    DbgPrint(TRACE_LEVEL_INFO, ("--> %s\n", __FUNCTION__))
+    DbgPrint(TRACE_LEVEL_VERBOSE, ("--> %s\n", __FUNCTION__))
 
 #define TRACE_OUT() \
-    DbgPrint(TRACE_LEVEL_INFO, ("<-- %s\n", __FUNCTION__))
+    DbgPrint(TRACE_LEVEL_VERBOSE, ("<-- %s\n", __FUNCTION__))

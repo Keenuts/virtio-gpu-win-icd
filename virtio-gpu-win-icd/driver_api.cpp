@@ -75,7 +75,7 @@ static void initialize_device(device_info_t *info) {
 
 void sendCommand(void *command, UINT32 size)
 {
-    DbgPrint(TRACE_LEVEL_INFO, ("--> %s.\n", __FUNCTION__));
+    TRACE_IN();
 
 	static bool initialized = false;
 	static device_info_t info;
@@ -111,5 +111,5 @@ void sendCommand(void *command, UINT32 size)
     if (res != STATUS_SUCCESS)
         DbgPrint(TRACE_LEVEL_ERROR, ("[!] %s: Escape returned with error 0x%x (%s)\n", __FUNCTION__, res, status2str(res)));
     assert(res == STATUS_SUCCESS);
-    DbgPrint(TRACE_LEVEL_INFO, ("<-- %s.\n", __FUNCTION__));
+    TRACE_OUT();
 }

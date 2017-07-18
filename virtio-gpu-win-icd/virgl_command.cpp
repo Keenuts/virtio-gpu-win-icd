@@ -26,8 +26,8 @@ namespace VirGL
     BOOL VirglCommandBuffer::submitCommandBuffer()
     {
         TRACE_IN();
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] submit cmd buffer\n"));
 
-        printHost("[?] Will submit a command buffer\n");
         BYTE *buffer = new BYTE[m_total_size + sizeof(GPU_SUBMIT_3D)];
         if (!buffer)
             return FALSE;
@@ -64,6 +64,7 @@ namespace VirGL
     VOID VirglCommandBuffer::createSubContext(UINT32 sub_ctx)
     {
         TRACE_IN();
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] create sub ctx\n"));
 
         GPU_3D_CMD head = { 0 };
         std::vector<UINT32> params;
@@ -79,6 +80,7 @@ namespace VirGL
     VOID VirglCommandBuffer::setCurrentSubContext(UINT32 sub_ctx)
     {
         TRACE_IN();
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] set sub context\n"));
 
         GPU_3D_CMD head = { 0 };
         std::vector<UINT32> params;
@@ -94,6 +96,7 @@ namespace VirGL
     VOID VirglCommandBuffer::deleteSubContext(UINT32 sub_ctx)
     {
         TRACE_IN();
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] Delete sub ctx\n"));
 
         GPU_3D_CMD head = { 0 };
         std::vector<UINT32> params;
@@ -111,6 +114,7 @@ namespace VirGL
     VOID VirglCommandBuffer::clear(UINT32 rgba[4], UINT64 depth, UINT32 stencil)
     {
         TRACE_IN();
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] Clear\n"));
 
         GPU_3D_CMD head = { 0 };
         std::vector<UINT32> params;
@@ -136,6 +140,7 @@ namespace VirGL
     VOID VirglCommandBuffer::setViewportState(FLOAT scale[3], FLOAT translation[3])
     {
         TRACE_IN();
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] SetViewport\n"));
 
         GPU_3D_CMD head = { 0 };
         std::vector<UINT32> params((sizeof(FLOAT) / sizeof(UINT32)) * 6);
@@ -156,6 +161,7 @@ namespace VirGL
     VOID VirglCommandBuffer::createObject(UINT32 type, UINT32 handle, UINT32 size)
     {
         TRACE_IN();
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] Create object\n"));
 
         UNREFERENCED_PARAMETER(type);
         UNREFERENCED_PARAMETER(handle);
@@ -167,6 +173,7 @@ namespace VirGL
     VOID VirglCommandBuffer::setFramebuffer(UINT32 handle, UINT32 zbuff_handle)
     {
         TRACE_IN();
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] set framebuffer\n"));
 
         UNREFERENCED_PARAMETER(handle);
         UNREFERENCED_PARAMETER(zbuff_handle);
@@ -177,6 +184,7 @@ namespace VirGL
     VOID VirglCommandBuffer::drawVBO(VBO_SETTINGS vbo)
     {
         TRACE_IN();
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] Draw VBO\n"));
 
         UNREFERENCED_PARAMETER(vbo);
 
@@ -200,8 +208,8 @@ namespace VirGL
     VOID createContext(UINT32 vgl_ctx)
     {
         TRACE_IN();
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] Create context\n"));
 
-        printHost("[?] Creating context\n");
         GPU_CTX_CREATE cmd = { 0 };
         cmd.hdr.type = VIRTIO_GPU_CMD_CTX_CREATE;
         cmd.hdr.ctx_id = vgl_ctx;
@@ -215,8 +223,8 @@ namespace VirGL
     VOID deleteContext(UINT32 vgl_ctx)
     {
         TRACE_IN();
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] Delete context\n"));
 
-        printHost("[?] Deleting context\n");
         GPU_CTX_DESTROY cmd = { 0 };
         cmd.hdr.type = VIRTIO_GPU_CMD_CTX_DESTROY;
         cmd.hdr.ctx_id = vgl_ctx;

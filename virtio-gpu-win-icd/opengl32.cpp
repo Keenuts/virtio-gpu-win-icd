@@ -67,7 +67,7 @@ void WINAPI glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
     TRACE_OUT();
 }
 
-#define DEFAULT_VGL_CTX 2
+#define APP_VGL_CTX 2
 HGLRC WINAPI wglCreateContext(HDC hdc)
 {
     static BOOL initialized = false;
@@ -78,15 +78,13 @@ HGLRC WINAPI wglCreateContext(HDC hdc)
 
     UNREFERENCED_PARAMETER(hdc);
 
-    VirGL::createContext(DEFAULT_VGL_CTX);
-
-    VirGL::VirglCommandBuffer cmd(DEFAULT_VGL_CTX);
+    VirGL::createContext(APP_VGL_CTX);
+    VirGL::VirglCommandBuffer cmd(APP_VGL_CTX);
     cmd.createSubContext(1);
     cmd.submitCommandBuffer();
 
-
     TRACE_OUT();
-	return NULL;
+	return (HGLRC)1;
 }
 
 BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
@@ -94,10 +92,11 @@ BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
     TRACE_IN();
 
     UNREFERENCED_PARAMETER(hdc);
-    UNREFERENCED_PARAMETER(hglrc);
 
-    VirGL::VirglCommandBuffer cmd(DEFAULT_VGL_CTX);
-    cmd.setCurrentSubContext(1);
+    UINT32 sub_ctx = (UINT32)(UINT64)hglrc;
+
+    VirGL::VirglCommandBuffer cmd(APP_VGL_CTX);
+    cmd.setCurrentSubContext(sub_ctx);
     cmd.submitCommandBuffer();
 
 
@@ -109,8 +108,13 @@ BOOL WINAPI wglDeleteContext(HGLRC hglrc)
 {
     TRACE_IN();
 
-    UNREFERENCED_PARAMETER(hglrc);
-    VirGL::deleteContext(DEFAULT_VGL_CTX);
+    UINT32 sub_ctx = (UINT32)(UINT64)hglrc;
+
+    VirGL::VirglCommandBuffer cmd(APP_VGL_CTX);
+    cmd.deleteSubContext(sub_ctx);
+    cmd.submitCommandBuffer();
+
+    VirGL::deleteContext(APP_VGL_CTX);
 
     TRACE_OUT();
 	return TRUE;

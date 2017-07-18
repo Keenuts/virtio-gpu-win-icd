@@ -11,8 +11,6 @@ from optparse import OptionParser
 DUMP_FILE = "dump.bin"
 path = os.path.dirname(os.path.abspath(__file__)) + os.path.sep + "opengl32.dll"
 dll = ctypes.CDLL(path)
-verbose = False
-quiet = False
 
 def initialize_test_mode():
   dll.initialize_test_mode(DUMP_FILE.encode('ascii'))
@@ -23,7 +21,7 @@ def call_function(name, args):
 def finish_tests():
   dll.finish_tests()
 
-def validate_dump(expected):
+def validate_dump(opt, expected):
   passed = True
   f = open(DUMP_FILE, "rb")
   f_size = os.fstat(f.fileno()).st_size
@@ -38,52 +36,45 @@ def validate_dump(expected):
 
     if len(cmd) != len(expected[i]):
       passed = False
-      if not quiet:
+      if not opt.quiet:
         print("[!] Expected", expected[i], "got", cmd)
       break
 
     for j in range(0, len(cmd)):
       if str(cmd[j]) != str(expected[i][j]):
         passed = False
-        if not quiet:
+        if not opt.quiet:
           print("[!] At %d: expected '%s' got '%s'" % (j, expected[i][j], cmd[j]))
         break
 
-    if verbose:
+    if opt.verbose:
       print("-", cmd)
     i += 1
 
   f.close()
   return passed and i == len(expected)
 
-def run_test(test):
+def run_test(opt, test):
   initialize_test_mode()
 
 
   for c in test['commands']:
-    if verbose:
+    if opt.verbose:
       print("Calling command: %s(" % c[0], *[str(e) + "," for e in c[1:]], ")")
     call_function(c[0], c[1:])
 
   finish_tests()
-  res = validate_dump(test['expected'])
+  res = validate_dump(opt, test['expected'])
   os.remove(DUMP_FILE)
   return res
 
 def main():
-  global verbose
-  global quiet
-
   parser = OptionParser()
   parser.add_option("-v", "--verbose", action="store_true", dest='verbose', default=False,
                     help="enable verbose output")
   parser.add_option("-q", "--quiet", action="store_true", dest='quiet', default=False,
                     help="only print summary")
   (options, args) = parser.parse_args()
-
-  verbose = options.verbose
-  quiet = options.quiet and not verbose
-
 
   if len(args) == 0:
     print("Usage: ./main.py <filename> ...")
@@ -98,10 +89,10 @@ def main():
         test = json.loads(f.read());
         f.close()
 
-        if verbose:
+        if options.verbose:
           print("\n\n[?] Running test '%s'\n" % test['name'])
 
-        if not run_test(test):
+        if not run_test(options, test):
           print("[!] Failed test '%s'" % test['name'])
         else:
           passed += 1
@@ -115,7 +106,7 @@ def main():
         print("[!] Cannot open the file '%s'.\n[!] File removed from count." % a)
         count -= 1
 
-    if verbose:
+    if options.verbose:
       print("\n==========")
     print("%d/%d test passed." % (passed, count))
     exit(count != passed)

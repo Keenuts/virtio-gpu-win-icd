@@ -26,6 +26,21 @@ namespace VirGL
         UINT32 cso;
     } VBO_SETTINGS, *PVBO_SETTINGS;
 
+#define VIRTIO_GPU_RESOURCE_FLAG_Y_0_TOP (1 << 0)
+    typedef struct _RESOURCE_CREATION {
+        UINT32 handle;
+        UINT32 target;
+        UINT32 format;
+        UINT32 bind;
+        UINT32 width;
+        UINT32 height;
+        UINT32 depth;
+        UINT32 array_size;
+        UINT32 last_level;
+        UINT32 nr_samples;
+        UINT32 flags;
+    } RESOURCE_CREATION;
+
     typedef UINT32 GPU_3D_CMD;
     typedef GPU_3D_CMD* PGPU_3D_CMD;
 
@@ -42,6 +57,7 @@ namespace VirGL
         VOID setCurrentSubContext(UINT32 sub_ctx);
         VOID deleteSubContext(UINT32 sub_ctx);
 
+        /* UNTESTED */
         VOID clear(UINT32 rgba[4], UINT64 depth, UINT32 stencil);
         VOID setViewportState(FLOAT scale[3], FLOAT translation[3]);
         VOID createObject(UINT32 type, UINT32 handle, UINT32 size);
@@ -53,4 +69,7 @@ namespace VirGL
 
     VOID createContext(UINT32 vgl_ctx);
     VOID deleteContext(UINT32 vgl_ctx);
+    VOID create_resource_2d(UINT32 ctx_id, UINT32 res_id, UINT32 format, UINT32 width, UINT32 height);
+    VOID create_resource_3d(UINT32 ctx_id, RESOURCE_CREATION info);
+    VOID attach_resource(UINT32 ctx_id, UINT32 res_id);
 }

@@ -233,4 +233,76 @@ namespace VirGL
 
         TRACE_OUT();
     }
+
+    VOID create_resource_2d(UINT32 ctx_id, UINT32 res_id, UINT32 format, UINT32 width, UINT32 height)
+    {
+        TRACE_IN();
+
+        GPU_RES_CREATE_2D info = { 0 };
+        info.format = format;
+        info.height = height;
+        info.width = width;
+        info.resource_id = res_id;
+        info.hdr.ctx_id = ctx_id;
+        info.hdr.type = VIRTIO_GPU_CMD_RESOURCE_CREATE_2D;
+
+        sendCommand(&info, sizeof(GPU_RES_CREATE_2D));
+
+        TRACE_OUT();
+    }
+
+    VOID create_resource_3d(UINT32 ctx_id, RESOURCE_CREATION info)
+    {
+        TRACE_IN();
+
+        GPU_RES_CREATE_3D data = { 0 };
+        
+        data.hdr.ctx_id = ctx_id;
+        data.hdr.type = VIRTIO_GPU_CMD_RESOURCE_CREATE_3D;
+        data.resource_id = info.handle;
+        data.target = info.target;
+        data.format = info.format;
+        data.bind = info.bind;
+        data.width = info.width;
+        data.height = info.height;
+        data.depth = info.depth;
+        data.array_size = info.array_size;
+        data.last_level = info.last_level;
+        data.nr_samples = info.nr_samples;
+        data.flags = info.flags;
+        sendCommand(&data, sizeof(GPU_RES_CREATE_3D));
+
+    VOID allocate_object(UINT32 size, UINT64 *handle);
+    VOID update_object(UINT64 handle, VOID *data, UINT64 size);
+    VOID destroy_object(UINT64 handle);
+        TRACE_OUT();
+    }
+
+    VOID attach_backing(UINT32 ctx_id, UINT32 res_id, UINT32 nr_entries)
+    {
+        TRACE_IN();
+
+        GPU_RES_ATTACH_BACKING info = { 0 };
+        info.hdr.ctx_id = ctx_id;
+        info.hdr.type = VIRTIO_GPU_CMD_CTX_ATTACH_RESOURCE;
+        info.nr_entries = nr_entries;
+        info.resource_id = res_id;
+
+        sendCommand(&info, sizeof(info));
+
+        TRACE_OUT();
+    }
+
+    VOID attach_resource(UINT32 ctx_id, UINT32 res_id)
+    {
+        TRACE_IN();
+
+        GPU_RES_ATTACH info = { 0 };
+        info.hdr.ctx_id = ctx_id;
+        info.hdr.type = VIRTIO_GPU_CMD_CTX_ATTACH_RESOURCE;
+        info.resource_id = res_id;
+        sendCommand(&info, sizeof(info));
+
+        TRACE_OUT();
+    }
 }

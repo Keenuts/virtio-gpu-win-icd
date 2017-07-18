@@ -118,11 +118,8 @@ def submit_3d(f, hdr, type, size):
 
   return output
 
-
-
 def unimplemented(f, hdr, type, size):
-  if not quiet:
-    print("Not implemented: %s" % type.name)
+  print("Not implemented: %s" % type.name)
   f.read(size);
   return [ type.name ]
 
@@ -135,7 +132,12 @@ def get_header(f):
       struct.unpack('<I', f.read(4))[0])
   return hdr
 
-def parse_command(f, hdr, size):
+def parse_cmd(f):
+  size = struct.unpack('L', f.read(4))[0]
+  driver_cmd = struct.unpack('L', f.read(4))[0]
+  hdr = get_header(f)
+  size -= 28
+
   type = virgl.CTRL_TYPE(hdr.type)
   if type == virgl.CTRL_TYPE.SHOW_DEBUG:
     f.read(size)
@@ -149,8 +151,4 @@ def parse_command(f, hdr, size):
   else:
     return unimplemented(f, hdr, type, size)
 
-def parse_cmd(f):
-    size = struct.unpack('L', f.read(4))[0]
-    hdr = get_header(f)
-    return parse_command(f, hdr, size - 24)
 

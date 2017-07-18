@@ -129,7 +129,7 @@
       <Command>
 copy "$(OutputPath)opengl32.dll" "C:\Users\Nathan\Desktop\WinJunk\opengl32.dll"
 copy "$(OutputPath)opengl32.dll" $(SolutionDir)\..\opengl_tests\opengl_context\x64\Release\"
-copy "$(OutputPath)opengl32.dll" $(SolutionDir)\..\tests\"</Command>
+copy "$(OutputPath)opengl32.dll" $(SolutionDir)\..\test_suite\"</Command>
     </PostBuildEvent>
     <ClCompile>
       <CompileAsWinRT>false</CompileAsWinRT>

@@ -13,6 +13,32 @@ struct device_info_t {
     PFND3DKMT_ESCAPE escape;
 };
 
+struct gpu_allocate_object_t {
+    UINT32 driver_cmd;
+    UINT32 size;
+    UINT64 handle;
+};
+
+struct gpu_update_object_t {
+    UINT32 driver_cmd;
+    UINT64 handle;
+    UINT32 size;
+    VOID* ptr;
+};
+
+struct gpu_delete_object_t {
+    UINT32 driver_cmd;
+    UINT64 handle;
+};
+
+enum driver_cmd {
+    DRIVER_CMD_INVALID = 0,
+    DRIVER_CMD_TRANSFER = 1,
+    DRIVER_CMD_ALLOCATE,
+    DRIVER_CMD_UPDATE,
+    DRIVER_CMD_FREE,
+};
+
 template<typename PFUNC>
 PFUNC getGDIFunction(LPCSTR procName)
 {
@@ -44,12 +70,20 @@ static const char* status2str(NTSTATUS status)
     }
 }
 
-static void initialize_device(device_info_t *info) {
+static device_info_t initialize_device() {
+
+    static device_info_t info;
+    static BOOL initialized = FALSE;
+
 	NTSTATUS res;
 	D3DKMT_ENUMADAPTERS adapters;
 	PFND3DKMT_ENUMADAPTERS enum_adapter;
     PFND3DKMT_ESCAPE escape;
 
+    if (initialized)
+        return info;
+
+    initialized = TRUE;
     if (!Tests::test_enabled) {
         FILE *com_fd;
         assert(freopen_s(&com_fd, "COM2:", "w", stdout) == 0);
@@ -66,50 +100,126 @@ static void initialize_device(device_info_t *info) {
 	res = enum_adapter(&adapters);
     assert(res == STATUS_SUCCESS && adapters.count > 0);
 
-	info->adapter = adapters.adapters[0].handle;
-#include "win_types.h"
-    info->escape = escape;
+	info.adapter = adapters.adapters[0].handle;
+    info.escape = escape;
 
     DbgPrint(TRACE_LEVEL_INFO, ("[?] ICD Initialized.\n"));
+    return info;
 }
 
-void sendCommand(void *command, UINT32 size)
+static NTSTATUS sendKernel(D3DKMT_ESCAPE *escape_info, PFND3DKMT_ESCAPE escape)
+{
+    if (Tests::test_enabled) {
+        Tests::dumpCommandBuffer(escape_info->privateDriverData, escape_info->privateDriverDataSize);
+        return STATUS_SUCCESS;
+    }
+
+    return escape(escape_info);
+}
+
+VOID sendCommand(VOID *command, UINT32 size)
 {
     TRACE_IN();
 
-	static bool initialized = false;
-	static device_info_t info;
 
 	D3DKMT_ESCAPE escape_info = { 0 };
     NTSTATUS res = STATUS_SUCCESS;
+	device_info_t info;
+    VOID *data = NULL;
 
-	if (!initialized) {
-		initialize_device(&info);
-		initialized = true;
-        VirGL::printHost("[?] Initialization done for OpenGL ICD\n");
-	}
-
+    info = initialize_device();
     if (!command)
         return;
+
+    data = new BYTE[size + sizeof(UINT32)];
+    assert(data);
+    *(UINT32*)data = DRIVER_CMD_TRANSFER;
+    memcpy_s((UINT32*)data + 1, size, command, size);
 
 	escape_info.hAdapter = info.adapter;
 	escape_info.hDevice = NULL;
 	escape_info.type = D3DKMT_ESCAPE_DRIVERPRIVATE;
 	escape_info.flags.Value = 1;
 	escape_info.hContext = NULL;
-	escape_info.privateDriverData = command;
-	escape_info.privateDriverDataSize = size;
+	escape_info.privateDriverData = data;
+	escape_info.privateDriverDataSize = size + sizeof(UINT32);
 
-    if (Tests::test_enabled) {
-        Tests::dumpCommandBuffer(escape_info.privateDriverData, escape_info.privateDriverDataSize);
-        res = STATUS_SUCCESS;
-    }
-    else {
-        res = info.escape(&escape_info);
-    }
+    res = sendKernel(&escape_info, info.escape);
+
+    delete[] data;
 
     if (res != STATUS_SUCCESS)
         DbgPrint(TRACE_LEVEL_ERROR, ("[!] %s: Escape returned with error 0x%x (%s)\n", __FUNCTION__, res, status2str(res)));
     assert(res == STATUS_SUCCESS);
+    TRACE_OUT();
+}
+
+UINT64 allocate_object(UINT32 size)
+{
+    TRACE_IN();
+    device_info_t info = initialize_device();
+
+    gpu_allocate_object_t data = { 0 };
+    data.driver_cmd = DRIVER_CMD_ALLOCATE;
+    data.size = size;
+    
+	D3DKMT_ESCAPE escape_info = { 0 };
+	escape_info.hAdapter = info.adapter;
+	escape_info.hDevice = NULL;
+	escape_info.type = D3DKMT_ESCAPE_DRIVERPRIVATE;
+	escape_info.flags.Value = 1;
+	escape_info.hContext = NULL;
+	escape_info.privateDriverData = &data;
+	escape_info.privateDriverDataSize = sizeof(data);
+    
+    sendKernel(&escape_info, info.escape);
+
+    TRACE_OUT();
+    return data.handle;
+}
+
+VOID update_object(UINT64 handle, VOID *ptr, UINT32 size)
+{
+    TRACE_IN();
+    device_info_t info = initialize_device();
+
+    gpu_update_object_t data = { 0 };
+    data.driver_cmd = DRIVER_CMD_UPDATE;
+    data.handle = handle;
+    data.ptr = ptr;
+    data.size = size;
+    
+	D3DKMT_ESCAPE escape_info = { 0 };
+	escape_info.hAdapter = info.adapter;
+	escape_info.hDevice = NULL;
+	escape_info.type = D3DKMT_ESCAPE_DRIVERPRIVATE;
+	escape_info.flags.Value = 1;
+	escape_info.hContext = NULL;
+	escape_info.privateDriverData = &data;
+	escape_info.privateDriverDataSize = sizeof(data);
+    
+    sendKernel(&escape_info, info.escape);
+    TRACE_OUT();
+}
+
+VOID delete_object(UINT64 handle)
+{
+    TRACE_IN();
+    device_info_t info = initialize_device();
+
+    gpu_delete_object_t data = { 0 };
+    data.driver_cmd = DRIVER_CMD_UPDATE;
+    data.handle = handle;
+    
+	D3DKMT_ESCAPE escape_info = { 0 };
+	escape_info.hAdapter = info.adapter;
+	escape_info.hDevice = NULL;
+	escape_info.type = D3DKMT_ESCAPE_DRIVERPRIVATE;
+	escape_info.flags.Value = 1;
+	escape_info.hContext = NULL;
+	escape_info.privateDriverData = &data;
+	escape_info.privateDriverDataSize = sizeof(data);
+    
+    sendKernel(&escape_info, info.escape);
     TRACE_OUT();
 }

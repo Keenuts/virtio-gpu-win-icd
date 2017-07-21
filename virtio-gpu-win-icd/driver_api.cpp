@@ -4,6 +4,7 @@
 #include "tests.h"
 #include "virgl.h"
 #include "virgl_command.h"
+#include "state.h"
 #include "win_types.h"
 
 #define TRANSFER_FUNCTION "D3DKMTEscape"
@@ -103,24 +104,31 @@ static device_info_t initialize_device() {
 	info.adapter = adapters.adapters[0].handle;
     info.escape = escape;
 
+    State::initializeState();
+
     DbgPrint(TRACE_LEVEL_INFO, ("[?] ICD Initialized.\n"));
     return info;
 }
 
 static NTSTATUS sendKernel(D3DKMT_ESCAPE *escape_info, PFND3DKMT_ESCAPE escape)
 {
+    TRACE_IN();
+    NTSTATUS res = STATUS_SUCCESS;
+
     if (Tests::test_enabled) {
         Tests::dumpCommandBuffer(escape_info->privateDriverData, escape_info->privateDriverDataSize);
-        return STATUS_SUCCESS;
+        res = STATUS_SUCCESS;
     }
+    else
+        res = escape(escape_info);
 
-    return escape(escape_info);
+    TRACE_OUT();
+    return res;
 }
 
 VOID sendCommand(VOID *command, UINT32 size)
 {
     TRACE_IN();
-
 
 	D3DKMT_ESCAPE escape_info = { 0 };
     NTSTATUS res = STATUS_SUCCESS;

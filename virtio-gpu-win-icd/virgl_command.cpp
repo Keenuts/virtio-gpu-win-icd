@@ -19,8 +19,8 @@ namespace VirGL
 
 #define LENGTH_FROM_HEADER(Header) (Header >> 16)
 
-    VirglCommandBuffer::VirglCommandBuffer(UINT32 ctx_id)
-        : m_ctx_id(ctx_id), m_total_size(0), m_commands()
+    VirglCommandBuffer::VirglCommandBuffer(UINT32 vgl_ctx)
+        : m_ctx_id(vgl_ctx), m_total_size(0), m_commands()
     { }
 
     BOOL VirglCommandBuffer::submitCommandBuffer()
@@ -111,7 +111,7 @@ namespace VirGL
     }
 
 
-    VOID VirglCommandBuffer::clear(UINT32 rgba[4], UINT64 depth, UINT32 stencil)
+    VOID VirglCommandBuffer::clear(FLOAT rgba[4], UINT64 depth, UINT32 stencil)
     {
         TRACE_IN();
         DbgPrint(TRACE_LEVEL_INFO, ("[?] Clear\n"));
@@ -123,7 +123,7 @@ namespace VirGL
 
         params.push_back(0); //FIXME: buffer index
         for (UINT32 i = 0; i < 4; i++)
-            params.push_back(rgba[i]);
+            params.push_back((UINT32)rgba[i]);
         //Space for the UINT64
         params.push_back(0);
         params.push_back(0);

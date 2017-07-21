@@ -11,7 +11,7 @@
 namespace Tests
 {
     //Used on the driver_api.cpp to call dumpCommandBuffer or Escape function
-    bool test_enabled;
+    bool test_enabled = false;
     std::ofstream *output_file;
 
     int WINAPI initialize_test_mode(const char* path)
@@ -19,12 +19,12 @@ namespace Tests
         TRACE_IN();
 
         test_enabled = true;
-        //errno_t err = fopen_s(&output_file, path, "w+");
 
         output_file = new std::ofstream();
         output_file->open(path, std::ios::out | std::ios::binary);
 
         sendCommand(NULL, 0);
+        assert(output_file->is_open());
         if (!output_file->is_open())
             test_enabled = false;
 

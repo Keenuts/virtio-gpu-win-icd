@@ -24,6 +24,7 @@
     <ClInclude Include="GLtypes.h" />
     <ClInclude Include="helper.h" />
     <ClInclude Include="opengl32.h" />
+    <ClInclude Include="state.h" />
     <ClInclude Include="tests.h" />
     <ClInclude Include="virgl.h" />
     <ClInclude Include="virgl_command.h" />
@@ -32,6 +33,7 @@
   <ItemGroup>
     <ClCompile Include="driver_api.cpp" />
     <ClCompile Include="opengl32.cpp" />
+    <ClCompile Include="state.cpp" />
     <ClCompile Include="tests.cpp" />
     <ClCompile Include="virgl_command.cpp" />
   </ItemGroup>

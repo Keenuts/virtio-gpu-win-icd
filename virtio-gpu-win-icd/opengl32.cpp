@@ -10,11 +10,21 @@
 #include "helper.h"
 #include "opengl32.h"
 #include "virgl_command.h"
+#include "state.h"
 #include "win_types.h"
+
+#define ENABLE_STATE_TRACKER 1
 
 void WINAPI glBegin(GLenum mode )
 {
     TRACE_IN();
+
+#if ENABLE_STATE_TRACKER
+    INT res = State::begin();
+    if (res)
+        DbgPrint(TRACE_LEVEL_WARNING, ("State tracker returned with error %d\n", res));
+#endif
+
     UNREFERENCED_PARAMETER(mode);
     TRACE_OUT();
 }
@@ -22,7 +32,14 @@ void WINAPI glBegin(GLenum mode )
 void WINAPI glClear( GLbitfield mask )
 {
     TRACE_IN();
+    
+#if ENABLE_STATE_TRACKER
+    INT res = State::clear();
+    if (res)
+        DbgPrint(TRACE_LEVEL_WARNING, ("State tracker returned with error %d\n", res));
+#endif
     UNREFERENCED_PARAMETER(mask);
+
     TRACE_OUT();
 }
 
@@ -37,6 +54,11 @@ void WINAPI glColor3f( GLfloat r, GLfloat g, GLfloat b)
 void WINAPI glEnd(void)
 {
     TRACE_IN();
+#if ENABLE_STATE_TRACKER
+    INT res = State::end();
+    if (res)
+        DbgPrint(TRACE_LEVEL_WARNING, ("State tracker returned with error %d\n", res));
+#endif
     TRACE_OUT();
 }
 
@@ -78,10 +100,16 @@ HGLRC WINAPI wglCreateContext(HDC hdc)
 
     UNREFERENCED_PARAMETER(hdc);
 
+#if ENABLE_STATE_TRACKER
+    INT res = State::createContext(1);
+    if (res)
+        DbgPrint(TRACE_LEVEL_WARNING, ("State tracker returned with error %d\n", res));
+#else
     VirGL::createContext(APP_VGL_CTX);
     VirGL::VirglCommandBuffer cmd(APP_VGL_CTX);
     cmd.createSubContext(1);
     cmd.submitCommandBuffer();
+#endif
 
     TRACE_OUT();
 	return (HGLRC)1;
@@ -95,9 +123,15 @@ BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
 
     UINT32 sub_ctx = (UINT32)(UINT64)hglrc;
 
+#if ENABLE_STATE_TRACKER
+    INT res = State::makeCurrent(sub_ctx);
+    if (res)
+        DbgPrint(TRACE_LEVEL_WARNING, ("State tracker returned with error %d\n", res));
+#else
     VirGL::VirglCommandBuffer cmd(APP_VGL_CTX);
     cmd.setCurrentSubContext(sub_ctx);
     cmd.submitCommandBuffer();
+#endif
 
 
     TRACE_OUT();
@@ -110,11 +144,17 @@ BOOL WINAPI wglDeleteContext(HGLRC hglrc)
 
     UINT32 sub_ctx = (UINT32)(UINT64)hglrc;
 
+#if ENABLE_STATE_TRACKER
+    INT res = State::deleteContext(sub_ctx);
+    if (res)
+        DbgPrint(TRACE_LEVEL_WARNING, ("State tracker returned with error %d\n", res));
+#else
     VirGL::VirglCommandBuffer cmd(APP_VGL_CTX);
     cmd.deleteSubContext(sub_ctx);
     cmd.submitCommandBuffer();
 
     VirGL::deleteContext(APP_VGL_CTX);
+#endif
 
     TRACE_OUT();
 	return TRUE;

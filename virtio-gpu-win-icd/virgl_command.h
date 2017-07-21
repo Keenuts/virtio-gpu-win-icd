@@ -49,7 +49,7 @@ namespace VirGL
         UINT32 m_total_size;
         UINT32 m_ctx_id;
 
-        VirglCommandBuffer(UINT32 ctx_id);
+        VirglCommandBuffer(UINT32 vgl_ctx);
 
         BOOL submitCommandBuffer();
 
@@ -58,7 +58,7 @@ namespace VirGL
         VOID deleteSubContext(UINT32 sub_ctx);
 
         /* UNTESTED */
-        VOID clear(UINT32 rgba[4], UINT64 depth, UINT32 stencil);
+        VOID clear(FLOAT rgba[4], UINT64 depth, UINT32 stencil);
         VOID setViewportState(FLOAT scale[3], FLOAT translation[3]);
         VOID createObject(UINT32 type, UINT32 handle, UINT32 size);
         VOID setFramebuffer(UINT32 handle, UINT32 zbuff_handle);

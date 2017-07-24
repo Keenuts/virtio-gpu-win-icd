@@ -5,6 +5,6 @@
 	],
 	"expected": [
 		["CTX_CREATE", "2"],
-		["SUBMIT_3D", "CREATE_SUB_CTX", 1]
+		["SUBMIT_3D", "CREATE_SUB_CTX", 1, "SET_SUB_CTX", 1]
 	]
 }

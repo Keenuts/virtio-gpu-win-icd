@@ -7,6 +7,7 @@ import os.path
 import parsing
 
 from optparse import OptionParser
+from ctypes import c_float, c_double
 
 
 DUMP_FILE = "./dump.bin"
@@ -20,7 +21,14 @@ def initialize_test_mode():
   dll.initialize_test_mode(DUMP_FILE.encode('ascii'))
 
 def call_function(name, args):
-  getattr(dll, name)(*args)
+  if name == "glClearColor":
+    getattr(dll, name)(c_float(args[0]), c_float(args[1]), c_float(args[2]), c_float(args[3]))
+  elif name == "glClearDepth":
+    getattr(dll, name)(c_double(args[0]))
+  else:
+    getattr(dll, name)(*args)
+
+
 
 def finish_tests():
   global dll
@@ -29,7 +37,7 @@ def finish_tests():
   _ctypes.FreeLibrary(dll._handle)
   dll = 0
 
-def validate_dump(opt, expected):
+def validate_dump(name, opt, expected):
   passed = True
   f = open(DUMP_FILE, "rb")
   f_size = os.fstat(f.fileno()).st_size
@@ -45,17 +53,22 @@ def validate_dump(opt, expected):
     if opt.verbose:
       print("-", cmd)
 
+    if i >= len(expected):
+        passed = False
+        print("[!] Invalid trailing command %s" % cmd)
+        break
+
     if len(cmd) != len(expected[i]):
       passed = False
       if not opt.quiet:
-        print("[!] Expected", expected[i], "got", cmd)
+        print("[!] %s: Expected %s got %s." % (name, expected[i], cmd))
       break
 
     for j in range(0, len(cmd)):
       if str(cmd[j]) != str(expected[i][j]):
         passed = False
         if not opt.quiet:
-          print("[!] At %d: expected '%s' got '%s'" % (j, expected[i][j], cmd[j]))
+          print("[!] %s: At %d: expected '%s' got '%s'" % (name, j, expected[i][j], cmd[j]))
         break
 
     i += 1
@@ -64,8 +77,6 @@ def validate_dump(opt, expected):
 
   if i < len(expected):
       print("[!] Expected another command (%s)" % expected[i])
-  elif i > len(expected):
-      print("[!] Received too much commands")
 
   return passed and i == len(expected)
 
@@ -79,7 +90,7 @@ def run_test(opt, test):
 
   finish_tests()
 
-  res = validate_dump(opt, test['expected'])
+  res = validate_dump(test['name'], opt, test['expected'])
   os.remove(DUMP_FILE)
 
   return res

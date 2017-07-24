@@ -56,6 +56,7 @@ typedef int GLintptrARB;
 typedef int GLsizeiptrARB;
 typedef int GLfixed;
 typedef int GLclampx;
+typedef double GLdouble;
 /* Internal convenience typedefs */
 typedef void (*_GLfuncptr)();
 

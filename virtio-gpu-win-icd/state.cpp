@@ -13,12 +13,47 @@ namespace State
     OpenGLState *states[MAX_STATE_COUNT];
 
     enum StateError {
-        STATE_ERROR_INVALID_ID,
+        STATE_ERROR_INVALID_ID = 1,
         STATE_ERROR_CONTEXT_EXISTS,
+        STATE_ERROR_CANNOT_ALLOC_CONTEXT,
         STATE_ERROR_INVALID_CONTEXT,
         STATE_ERROR_INVALID_CURRENT_CONTEXT,
         STATE_ERROR_NOT_ALLOWED,
     };
+
+    CONST CHAR* errorToStr(INT error)
+    {
+#define ERRTOSTR(Error) case Error: return #Error
+        switch (error)
+        {
+        ERRTOSTR(STATUS_SUCCESS);
+        ERRTOSTR(STATE_ERROR_INVALID_ID);
+        ERRTOSTR(STATE_ERROR_CONTEXT_EXISTS);
+        ERRTOSTR(STATE_ERROR_CANNOT_ALLOC_CONTEXT);
+        ERRTOSTR(STATE_ERROR_INVALID_CONTEXT);
+        ERRTOSTR(STATE_ERROR_INVALID_CURRENT_CONTEXT);
+        ERRTOSTR(STATE_ERROR_NOT_ALLOWED);
+        default:
+            return "UNKNOWN";
+        }
+#undef ERRTOSTR
+    }
+
+    OpenGLState::OpenGLState()
+    {
+        clear_depth = 1.0;
+        clear_stencil = 0;
+        memset(clear_color, 0, sizeof(clear_color));
+
+        framebuffer_id = 0;
+        fragshader_id = 0;
+        vertshader_id = 0;
+        dsa_id = 0;
+        vertex_buffer_id = 0;
+
+        restricted = FALSE;
+        model_builder = NULL;
+    }
 
     VOID initializeState(VOID)
     {
@@ -26,27 +61,46 @@ namespace State
         DbgPrint(TRACE_LEVEL_INFO, ("[*] Initializing state tracker.\n"));
     }
 
-    INT createContext(UINT32 id)
+    static VOID createVglCtx(VOID)
+    {
+        states[0] = new OpenGLState();
+        current_vgl_ctx = DEFAULT_VGL_CTX;
+        current_sub_ctx = 0;
+
+        VirGL::createContext(DEFAULT_VGL_CTX);
+    }
+
+    static VOID deleteVglCtx(VOID)
+    {
+        current_sub_ctx = 0;
+        current_vgl_ctx = 0;
+        VirGL::deleteContext(DEFAULT_VGL_CTX);
+    }
+
+    INT createContext(UINT32 *id)
     {
         TRACE_IN();
+        assert(id);
 
-        if (id >= MAX_STATE_COUNT)
-            return STATE_ERROR_INVALID_ID;
-        if (states[id])
-            return STATE_ERROR_CONTEXT_EXISTS;
+        UINT32 i;
+        for (i = 1; i < MAX_STATE_COUNT; i++)
+            if (!states[i])
+                break;
 
-        states[id] = new OpenGLState();
-        memset(states[id], 0, sizeof(OpenGLState));
+        if (i >= MAX_STATE_COUNT)
+            return STATE_ERROR_CANNOT_ALLOC_CONTEXT;
 
-        if (!current_vgl_ctx) {
-            current_vgl_ctx = DEFAULT_VGL_CTX;
-            VirGL::createContext(DEFAULT_VGL_CTX);
-        }
+        if (current_vgl_ctx == 0)
+            createVglCtx();
 
-        current_sub_ctx = id;
-        VirGL::VirglCommandBuffer cmd(id);
-        cmd.createSubContext(id);
+        states[i] = new OpenGLState();
+
+        VirGL::VirglCommandBuffer cmd(current_vgl_ctx);
+        cmd.createSubContext(i);
+        cmd.setCurrentSubContext(i);
         cmd.submitCommandBuffer();
+        current_sub_ctx = i;
+        *id = i;
 
         TRACE_OUT();
         return STATUS_SUCCESS;
@@ -59,17 +113,17 @@ namespace State
         if (!states[id])
             return STATE_ERROR_INVALID_CONTEXT;
 
-        current_sub_ctx = id;
-        VirGL::VirglCommandBuffer cmd(id);
+        VirGL::VirglCommandBuffer cmd(current_vgl_ctx);
         cmd.setCurrentSubContext(id);
         cmd.submitCommandBuffer();
+        current_sub_ctx = id;
 
         return STATUS_SUCCESS;
     }
 
     INT deleteContext(UINT32 id)
     {
-        if (id >= MAX_STATE_COUNT)
+        if (id == 0 || id >= MAX_STATE_COUNT)
             return STATE_ERROR_INVALID_ID;
         if (!states[id])
             return STATE_ERROR_INVALID_CONTEXT;
@@ -80,34 +134,70 @@ namespace State
 
         VirGL::VirglCommandBuffer cmd(id);
         cmd.deleteSubContext(id);
+        cmd.setCurrentSubContext(0);
         cmd.submitCommandBuffer();
 
-        for (UINT32 i = 0; i < MAX_STATE_COUNT; i++)
+        for (UINT32 i = 1; i < MAX_STATE_COUNT; i++)
             if (states[i])
                 return STATUS_SUCCESS;
 
-        current_vgl_ctx = 0;
-        VirGL::deleteContext(DEFAULT_VGL_CTX);
+        deleteVglCtx();
         return STATUS_SUCCESS;
     }
 
+#define CHECK_VALID_CTX(States, Current_sub_ctx)        \
+    do {                                                \
+        if (current_sub_ctx == 0)                       \
+            return STATE_ERROR_INVALID_CURRENT_CONTEXT; \
+        if (!states[current_sub_ctx])                   \
+            return STATE_ERROR_INVALID_CURRENT_CONTEXT; \
+    } while (0)
+
     INT clear(VOID)
     {
-        if (current_sub_ctx == 0)
-            return STATE_ERROR_INVALID_CURRENT_CONTEXT;
-        if (!states[current_sub_ctx])
-            return STATE_ERROR_INVALID_CURRENT_CONTEXT;
-
+        CHECK_VALID_CTX(stages, current_sub_ctx);
         if (states[current_sub_ctx]->restricted)
             return STATE_ERROR_NOT_ALLOWED;
 
         VirGL::VirglCommandBuffer cmd(current_sub_ctx);
-        float color[4] = { 0.0f, 0.0f, 0.5f, 1.0f };
 
-        cmd.setCurrentSubContext(current_sub_ctx);
-        cmd.clear(color, 0, 0);
+        cmd.clear(states[current_sub_ctx]->clear_color,
+                  states[current_sub_ctx]->clear_depth,
+                  states[current_sub_ctx]->clear_stencil);
         cmd.submitCommandBuffer();
 
+        return STATUS_SUCCESS;
+    }
+
+    INT clearColor(FLOAT r, FLOAT g, FLOAT b, FLOAT a)
+    {
+        CHECK_VALID_CTX(stages, current_sub_ctx);
+        if (states[current_sub_ctx]->restricted)
+            return STATE_ERROR_NOT_ALLOWED;
+
+        states[current_sub_ctx]->clear_color[0] = r;
+        states[current_sub_ctx]->clear_color[1] = g;
+        states[current_sub_ctx]->clear_color[2] = b;
+        states[current_sub_ctx]->clear_color[3] = a;
+
+        return STATUS_SUCCESS;
+    }
+
+    INT clearDepth(double d)
+    {
+        CHECK_VALID_CTX(stages, current_sub_ctx);
+        if (states[current_sub_ctx]->restricted)
+            return STATE_ERROR_NOT_ALLOWED;
+        states[current_sub_ctx]->clear_depth = d;
+        return STATUS_SUCCESS;
+    }
+
+    INT clearStencil(UINT32 s)
+    {
+        CHECK_VALID_CTX(stages, current_sub_ctx);
+        if (states[current_sub_ctx]->restricted)
+            return STATE_ERROR_NOT_ALLOWED;
+        states[current_sub_ctx]->clear_stencil = s;
         return STATUS_SUCCESS;
     }
 

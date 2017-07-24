@@ -26,6 +26,10 @@ def destroy_sub_ctx(cmd, args):
   ctx_id, = struct.unpack("<I", args)
   return [ virgl.CMD_3D(cmd["cmd"]).name, str(ctx_id)]
 
+def clear(cmd, args):
+  buf_idx, r, g, b, a, depth, stencil = struct.unpack("<IffffdI", args)
+  return [ virgl.CMD_3D(cmd["cmd"]).name, buf_idx, r, g, b, a, depth, stencil]
+
 def evaluate_command(cmd, args):
     head = cmd["cmd"]
 

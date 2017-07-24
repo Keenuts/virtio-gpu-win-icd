@@ -13,17 +13,18 @@
 #include "state.h"
 #include "win_types.h"
 
-#define ENABLE_STATE_TRACKER 1
+#define CallStateTracker(Function, ...)                                                                                                         \
+    do {                                                                                                                                        \
+        INT res = Function(__VA_ARGS__);                                                                                                        \
+        if (res)                                                                                                                                \
+            DbgPrint(TRACE_LEVEL_WARNING, ("[!] %s: state-tracker returned the error %d(%s)\n", __FUNCTION__, res, State::errorToStr(res)));    \
+    } while (0)
 
 void WINAPI glBegin(GLenum mode )
 {
     TRACE_IN();
 
-#if ENABLE_STATE_TRACKER
-    INT res = State::begin();
-    if (res)
-        DbgPrint(TRACE_LEVEL_WARNING, ("State tracker returned with error %d\n", res));
-#endif
+    CallStateTracker(State::begin);
 
     UNREFERENCED_PARAMETER(mode);
     TRACE_OUT();
@@ -33,12 +34,35 @@ void WINAPI glClear( GLbitfield mask )
 {
     TRACE_IN();
     
-#if ENABLE_STATE_TRACKER
-    INT res = State::clear();
-    if (res)
-        DbgPrint(TRACE_LEVEL_WARNING, ("State tracker returned with error %d\n", res));
-#endif
+    CallStateTracker(State::clear);
+
     UNREFERENCED_PARAMETER(mask);
+    TRACE_OUT();
+}
+
+void WINAPI glClearColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
+{
+    TRACE_IN();
+
+    CallStateTracker(State::clearColor, r, g, b, a);
+
+    TRACE_OUT();
+}
+
+void WINAPI glClearDepth(GLdouble depth)
+{
+    TRACE_IN();
+
+    CallStateTracker(State::clearDepth, depth);
+
+    TRACE_OUT();
+}
+
+void WINAPI glClearStencil(GLint stencil)
+{
+    TRACE_IN();
+
+    CallStateTracker(State::clearStencil , stencil);
 
     TRACE_OUT();
 }
@@ -54,11 +78,9 @@ void WINAPI glColor3f( GLfloat r, GLfloat g, GLfloat b)
 void WINAPI glEnd(void)
 {
     TRACE_IN();
-#if ENABLE_STATE_TRACKER
-    INT res = State::end();
-    if (res)
-        DbgPrint(TRACE_LEVEL_WARNING, ("State tracker returned with error %d\n", res));
-#endif
+
+    CallStateTracker(State::end);
+
     TRACE_OUT();
 }
 
@@ -99,20 +121,12 @@ HGLRC WINAPI wglCreateContext(HDC hdc)
         sendCommand(NULL, 0);
 
     UNREFERENCED_PARAMETER(hdc);
+    UINT32 ctx_id;
 
-#if ENABLE_STATE_TRACKER
-    INT res = State::createContext(1);
-    if (res)
-        DbgPrint(TRACE_LEVEL_WARNING, ("State tracker returned with error %d\n", res));
-#else
-    VirGL::createContext(APP_VGL_CTX);
-    VirGL::VirglCommandBuffer cmd(APP_VGL_CTX);
-    cmd.createSubContext(1);
-    cmd.submitCommandBuffer();
-#endif
+    CallStateTracker(State::createContext, &ctx_id);
 
     TRACE_OUT();
-	return (HGLRC)1;
+	return (HGLRC)ctx_id;
 }
 
 BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
@@ -122,20 +136,12 @@ BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
     UNREFERENCED_PARAMETER(hdc);
 
     UINT32 sub_ctx = (UINT32)(UINT64)hglrc;
-
-#if ENABLE_STATE_TRACKER
     INT res = State::makeCurrent(sub_ctx);
     if (res)
-        DbgPrint(TRACE_LEVEL_WARNING, ("State tracker returned with error %d\n", res));
-#else
-    VirGL::VirglCommandBuffer cmd(APP_VGL_CTX);
-    cmd.setCurrentSubContext(sub_ctx);
-    cmd.submitCommandBuffer();
-#endif
-
+        DbgPrint(TRACE_LEVEL_WARNING, ("[!] %s: state-tracker returned the error %d(%s)\n", __FUNCTION__, res, State::errorToStr(res)));
 
     TRACE_OUT();
-	return TRUE;
+	return res == STATUS_SUCCESS;
 }
 
 BOOL WINAPI wglDeleteContext(HGLRC hglrc)
@@ -143,21 +149,12 @@ BOOL WINAPI wglDeleteContext(HGLRC hglrc)
     TRACE_IN();
 
     UINT32 sub_ctx = (UINT32)(UINT64)hglrc;
-
-#if ENABLE_STATE_TRACKER
     INT res = State::deleteContext(sub_ctx);
     if (res)
-        DbgPrint(TRACE_LEVEL_WARNING, ("State tracker returned with error %d\n", res));
-#else
-    VirGL::VirglCommandBuffer cmd(APP_VGL_CTX);
-    cmd.deleteSubContext(sub_ctx);
-    cmd.submitCommandBuffer();
-
-    VirGL::deleteContext(APP_VGL_CTX);
-#endif
+        DbgPrint(TRACE_LEVEL_WARNING, ("[!] %s: state-tracker returned the error %d(%s)\n", __FUNCTION__, res, State::errorToStr(res)));
 
     TRACE_OUT();
-	return TRUE;
+	return res == STATUS_SUCCESS;
 }
 
 BOOL WINAPI wglChoosePixelFormat(HDC hdc, const PIXELFORMATDESCRIPTOR *ppfd)

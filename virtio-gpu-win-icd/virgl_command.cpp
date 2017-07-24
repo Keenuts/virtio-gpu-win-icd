@@ -111,7 +111,7 @@ namespace VirGL
     }
 
 
-    VOID VirglCommandBuffer::clear(FLOAT rgba[4], UINT64 depth, UINT32 stencil)
+    VOID VirglCommandBuffer::clear(FLOAT rgba[4], double depth, UINT32 stencil)
     {
         TRACE_IN();
         DbgPrint(TRACE_LEVEL_INFO, ("[?] Clear\n"));
@@ -120,16 +120,13 @@ namespace VirGL
         std::vector<UINT32> params;
 
         head = createHeader(VIRGL_CCMD_CLEAR, 0, 8);
+        UINT32 buf_idx = 0;
 
-        params.push_back(0); //FIXME: buffer index
-        for (UINT32 i = 0; i < 4; i++)
-            params.push_back((UINT32)rgba[i]);
-        //Space for the UINT64
-        params.push_back(0);
-        params.push_back(0);
-        params.push_back(stencil);
-
-        memcpy(params.data() + (sizeof(UINT32) * (1 + 4)), &depth, sizeof(UINT64));
+        params.resize(8);
+        memcpy(params.data(), &buf_idx, sizeof(UINT32));
+        memcpy(params.data() + 1, rgba, sizeof(FLOAT) * 4);
+        memcpy(params.data() + 5, &depth, sizeof(UINT64));
+        memcpy(params.data() + 7, &stencil, sizeof(UINT32));
 
         m_commands.emplace_back(std::pair<GPU_3D_CMD, std::vector<UINT32>>(head, params));
         m_total_size += sizeof(head) + sizeof(UINT32) * LENGTH_FROM_HEADER(head);

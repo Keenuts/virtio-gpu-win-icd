@@ -7,7 +7,12 @@ EXPORTS
 	wglDescribePixelFormat @350
 	wglSetPixelFormat @360
 	glBegin @11
+
 	glClear @17
+	glClearColor @19
+	glClearDepth @20
+	glClearStencil @22
+
 	glColor3f @28
 	glEnd @82
 	glFlush @98

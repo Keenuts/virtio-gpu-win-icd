@@ -1,14 +1,14 @@
 {
-	"name": "Context 2",
+	"name": "Clear 1",
 	"commands": [
 		["wglCreateContext", 0],
-		["wglMakeCurrent", 0, 1],
+		["glClear", 0],
 		["wglDeleteContext", 1]
 	],
 	"expected": [
 		["CTX_CREATE", "2"],
 		["SUBMIT_3D", "CREATE_SUB_CTX", 1, "SET_SUB_CTX", 1],
-		["SUBMIT_3D", "SET_SUB_CTX", 1],
+		["SUBMIT_3D", "CLEAR", 0, 0.0, 0.0, 0.0, 0.0, 1.0, 0],
 		["SUBMIT_3D", "DESTROY_SUB_CTX", 1, "SET_SUB_CTX", 0],
 		["CTX_DESTROY", "2"]
 	]

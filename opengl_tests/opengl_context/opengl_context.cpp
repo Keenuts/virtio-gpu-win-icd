@@ -14,15 +14,22 @@ display()
 {
 	/* rotate a triangle around */
 	glClear(GL_COLOR_BUFFER_BIT);
+
 	glBegin(GL_TRIANGLES);
+
 	glColor3f(1.0f, 0.0f, 0.0f);
 	glVertex2i(0, 1);
 	glColor3f(0.0f, 1.0f, 0.0f);
 	glVertex2i(-1, -1);
 	glColor3f(0.0f, 0.0f, 1.0f);
 	glVertex2i(1, -1);
+
 	glEnd();
+
 	glFlush();
+
+    Sleep(1000);
+    exit(0);
 }
 
 
@@ -68,8 +75,8 @@ CreateOpenGLWindow(char* title, int x, int y, int width, int height,
 	WNDCLASS    wc;
 	PIXELFORMATDESCRIPTOR pfd;
 	static HINSTANCE hInstance = 0;
-	const char* err1 = "RegisterClass() failed : Cannot register window class.";
-	const char* err2 = "CreateWindow() failed : Cannot create a window.";
+	const LPCWSTR err1 = L"RegisterClass() failed : Cannot register window class.";
+	const LPCWSTR err2 = L"CreateWindow() failed : Cannot create a window.";
 
 	/* only register the window class once - use hInstance as a flag. */
 	if (!hInstance) {
@@ -83,20 +90,21 @@ CreateOpenGLWindow(char* title, int x, int y, int width, int height,
 		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 		wc.hbrBackground = NULL;
 		wc.lpszMenuName = NULL;
-		wc.lpszClassName = "OpenGL";
+		wc.lpszClassName = L"OpenGL";
 
 		if (!RegisterClass(&wc)) {
-			MessageBox(NULL, err1, "Error", MB_OK);
+			MessageBox(NULL, err1, L"Error", MB_OK);
 			return NULL;
 		}
 	}
 
-	hWnd = CreateWindow("OpenGL", title, WS_OVERLAPPEDWINDOW |
+    UNREFERENCED_PARAMETER(title);
+	hWnd = CreateWindow(L"OpenGL", L"Window Title", WS_OVERLAPPEDWINDOW |
 		WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
 		x, y, width, height, NULL, NULL, hInstance, NULL);
 
 	if (hWnd == NULL) {
-		MessageBox(NULL, err2, "Error", MB_OK);
+		MessageBox(NULL, err2, L"Error", MB_OK);
 		return NULL;
 	}
 
@@ -114,14 +122,14 @@ CreateOpenGLWindow(char* title, int x, int y, int width, int height,
 	pf = ChoosePixelFormat(hDC, &pfd);
 	
 	if (pf == 0) {
-		MessageBox(NULL, "ChoosePixelFormat() failed:  "
-			"Cannot find a suitable pixel format.", "Error", MB_OK);
+		MessageBox(NULL, L"ChoosePixelFormat() failed:  "
+			"Cannot find a suitable pixel format.", L"Error", MB_OK);
 		return 0;
 	}
 
 	if (SetPixelFormat(hDC, pf, &pfd) == FALSE) {
-		MessageBox(NULL, "SetPixelFormat() failed:  "
-			"Cannot set format specified.", "Error", MB_OK);
+		MessageBox(NULL, L"SetPixelFormat() failed:  "
+			"Cannot set format specified.", L"Error", MB_OK);
 		return 0;
 	}
 

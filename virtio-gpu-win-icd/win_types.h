@@ -112,11 +112,8 @@ typedef struct tagPIXELFORMATDESCRIPTOR {
     } D3DKMT_ESCAPETYPE;
 
     typedef struct _D3DDDI_ESCAPEFLAGS {
-        union
-        {
-            UINT flag;
-            UINT Value;
-        };
+        UINT HardwareAccess : 1;
+        UINT reserved : 31;
     } D3DDDI_ESCAPEFLAGS;
 
     typedef struct _D3DKMT_ESCAPE {

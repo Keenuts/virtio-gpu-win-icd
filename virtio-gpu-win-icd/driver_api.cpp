@@ -1,4 +1,5 @@
 #include <cassert>
+#include <intrin.h>
 
 #include "debug.h"
 #include "tests.h"
@@ -8,11 +9,6 @@
 #include "win_types.h"
 
 #define TRANSFER_FUNCTION "D3DKMTEscape"
-
-struct device_info_t {
-	D3DKMT_HANDLE adapter;
-    PFND3DKMT_ESCAPE escape;
-};
 
 struct gpu_allocate_object_t {
     UINT32 driver_cmd;
@@ -40,13 +36,17 @@ enum driver_cmd {
     DRIVER_CMD_FREE,
 };
 
+typedef struct _DRIVER_DATA {
+    HMODULE lib;
+    PFND3DKMT_ESCAPE escape;
+    PFND3DKMT_ENUMADAPTERS enum_adapters;
+    D3DKMT_HANDLE adapter;
+} DRIVER_DATA, *PDRIVER_DATA;
+
 template<typename PFUNC>
-PFUNC getGDIFunction(LPCSTR procName)
+PFUNC getGDIFunction(PDRIVER_DATA data, LPCSTR procName)
 {
-	static HMODULE lib = NULL;
-	if (lib == NULL)
-		lib = LoadLibrary("gdi32.dll");
-	return reinterpret_cast<PFUNC>(GetProcAddress(lib, procName));
+	return reinterpret_cast<PFUNC>(GetProcAddress(data->lib, procName));
 }
 
 #define TOSTR(Status) \
@@ -71,43 +71,48 @@ static const char* status2str(NTSTATUS status)
     }
 }
 
-static device_info_t initialize_device() {
+static PDRIVER_DATA initialize_device() {
 
-    static device_info_t info;
+    static PDRIVER_DATA driver_data = NULL;
     static BOOL initialized = FALSE;
-
 	NTSTATUS res;
 	D3DKMT_ENUMADAPTERS adapters;
-	PFND3DKMT_ENUMADAPTERS enum_adapter;
-    PFND3DKMT_ESCAPE escape;
 
     if (initialized)
-        return info;
-
+        return driver_data;
     initialized = TRUE;
+
+#if _DEBUG
+#else
     if (!Tests::test_enabled) {
         FILE *com_fd;
         assert(freopen_s(&com_fd, "COM2:", "w", stdout) == 0);
     }
+#endif
 
-    DbgPrint(TRACE_LEVEL_INFO, ("[?] Starting ICD Build on %s %s: .\n", __DATE__, __TIME__));
+    DbgPrint(TRACE_LEVEL_ERROR, ("[?] Starting ICD Build on %s %s: .\n", __DATE__, __TIME__));
 
-	enum_adapter = getGDIFunction<PFND3DKMT_ENUMADAPTERS>("D3DKMTEnumAdapters");
-	escape = getGDIFunction<PFND3DKMT_ESCAPE>("D3DKMTEscape");
-    assert(enum_adapter);
-    assert(escape);
+    driver_data = new DRIVER_DATA();
+    assert(driver_data);
+    driver_data->lib = LoadLibrary(L"gdi32.dll");
+    assert(driver_data->lib);
+
+	driver_data->enum_adapters = getGDIFunction<PFND3DKMT_ENUMADAPTERS>(driver_data, "D3DKMTEnumAdapters");
+	driver_data->escape = getGDIFunction<PFND3DKMT_ESCAPE>(driver_data, "D3DKMTEscape");
+    assert(driver_data->enum_adapters);
+    assert(driver_data->escape);
 
 	memset(&adapters, 0, sizeof(D3DKMT_ENUMADAPTERS));
-	res = enum_adapter(&adapters);
+	res = driver_data->enum_adapters(&adapters);
     assert(res == STATUS_SUCCESS && adapters.count > 0);
 
-	info.adapter = adapters.adapters[0].handle;
-    info.escape = escape;
+	driver_data->adapter = adapters.adapters[0].handle;
 
     State::initializeState();
 
     DbgPrint(TRACE_LEVEL_INFO, ("[?] ICD Initialized.\n"));
-    return info;
+    DbgPrint(TRACE_LEVEL_ERROR, ("Escape function: %p PDRIVER_DATA = %p\n", driver_data->escape, driver_data));
+    return driver_data;
 }
 
 static NTSTATUS sendKernel(D3DKMT_ESCAPE *escape_info, PFND3DKMT_ESCAPE escape)
@@ -115,12 +120,24 @@ static NTSTATUS sendKernel(D3DKMT_ESCAPE *escape_info, PFND3DKMT_ESCAPE escape)
     TRACE_IN();
     NTSTATUS res = STATUS_SUCCESS;
 
+#if _DEBUG
     if (Tests::test_enabled) {
         Tests::dumpCommandBuffer(escape_info->privateDriverData, escape_info->privateDriverDataSize);
         res = STATUS_SUCCESS;
     }
-    else
+    UNREFERENCED_PARAMETER(escape);
+#else
+    if (Tests::test_enabled) {
+        Tests::dumpCommandBuffer(escape_info->privateDriverData, escape_info->privateDriverDataSize);
+        res = STATUS_SUCCESS;
+    }
+    else {
         res = escape(escape_info);
+        if (res != STATUS_SUCCESS)
+            DbgPrint(TRACE_LEVEL_ERROR, ("Escape returned: %s(0x%x)\n", State::errorToStr(res), res));
+        assert(res == STATUS_SUCCESS);
+    }
+#endif
 
     TRACE_OUT();
     return res;
@@ -132,7 +149,7 @@ VOID sendCommand(VOID *command, UINT32 size)
 
 	D3DKMT_ESCAPE escape_info = { 0 };
     NTSTATUS res = STATUS_SUCCESS;
-	device_info_t info;
+	PDRIVER_DATA info;
     VOID *data = NULL;
 
     info = initialize_device();
@@ -142,17 +159,17 @@ VOID sendCommand(VOID *command, UINT32 size)
     data = new BYTE[size + sizeof(UINT32)];
     assert(data);
     *(UINT32*)data = DRIVER_CMD_TRANSFER;
-    memcpy_s((UINT32*)data + 1, size, command, size);
+    memcpy((UINT32*)data + 1, command, size);
 
-	escape_info.hAdapter = info.adapter;
+	escape_info.hAdapter = info->adapter;
 	escape_info.hDevice = NULL;
 	escape_info.type = D3DKMT_ESCAPE_DRIVERPRIVATE;
-	escape_info.flags.Value = 1;
+	escape_info.flags.HardwareAccess = 1;
 	escape_info.hContext = NULL;
 	escape_info.privateDriverData = data;
 	escape_info.privateDriverDataSize = size + sizeof(UINT32);
 
-    res = sendKernel(&escape_info, info.escape);
+    res = sendKernel(&escape_info, info->escape);
 
     delete[] data;
 
@@ -165,22 +182,22 @@ VOID sendCommand(VOID *command, UINT32 size)
 UINT64 allocate_object(UINT32 size)
 {
     TRACE_IN();
-    device_info_t info = initialize_device();
+    PDRIVER_DATA info = initialize_device();
 
     gpu_allocate_object_t data = { 0 };
     data.driver_cmd = DRIVER_CMD_ALLOCATE;
     data.size = size;
     
 	D3DKMT_ESCAPE escape_info = { 0 };
-	escape_info.hAdapter = info.adapter;
+	escape_info.hAdapter = info->adapter;
 	escape_info.hDevice = NULL;
 	escape_info.type = D3DKMT_ESCAPE_DRIVERPRIVATE;
-	escape_info.flags.Value = 1;
+	escape_info.flags.HardwareAccess = 1;
 	escape_info.hContext = NULL;
 	escape_info.privateDriverData = &data;
 	escape_info.privateDriverDataSize = sizeof(data);
     
-    sendKernel(&escape_info, info.escape);
+    sendKernel(&escape_info, info->escape);
 
     TRACE_OUT();
     return data.handle;
@@ -189,7 +206,7 @@ UINT64 allocate_object(UINT32 size)
 VOID update_object(UINT64 handle, VOID *ptr, UINT32 size)
 {
     TRACE_IN();
-    device_info_t info = initialize_device();
+    PDRIVER_DATA info = initialize_device();
 
     gpu_update_object_t data = { 0 };
     data.driver_cmd = DRIVER_CMD_UPDATE;
@@ -198,36 +215,36 @@ VOID update_object(UINT64 handle, VOID *ptr, UINT32 size)
     data.size = size;
     
 	D3DKMT_ESCAPE escape_info = { 0 };
-	escape_info.hAdapter = info.adapter;
+	escape_info.hAdapter = info->adapter;
 	escape_info.hDevice = NULL;
 	escape_info.type = D3DKMT_ESCAPE_DRIVERPRIVATE;
-	escape_info.flags.Value = 1;
+	escape_info.flags.HardwareAccess = 1;
 	escape_info.hContext = NULL;
 	escape_info.privateDriverData = &data;
 	escape_info.privateDriverDataSize = sizeof(data);
     
-    sendKernel(&escape_info, info.escape);
+    sendKernel(&escape_info, info->escape);
     TRACE_OUT();
 }
 
 VOID delete_object(UINT64 handle)
 {
     TRACE_IN();
-    device_info_t info = initialize_device();
+    PDRIVER_DATA info = initialize_device();
 
     gpu_delete_object_t data = { 0 };
     data.driver_cmd = DRIVER_CMD_UPDATE;
     data.handle = handle;
     
 	D3DKMT_ESCAPE escape_info = { 0 };
-	escape_info.hAdapter = info.adapter;
+	escape_info.hAdapter = info->adapter;
 	escape_info.hDevice = NULL;
 	escape_info.type = D3DKMT_ESCAPE_DRIVERPRIVATE;
-	escape_info.flags.Value = 1;
+	escape_info.flags.HardwareAccess = 1;
 	escape_info.hContext = NULL;
 	escape_info.privateDriverData = &data;
 	escape_info.privateDriverDataSize = sizeof(data);
     
-    sendKernel(&escape_info, info.escape);
+    sendKernel(&escape_info, info->escape);
     TRACE_OUT();
 }

@@ -9,7 +9,11 @@
 #define TRACE_LEVEL_ERROR 3
 #define TRACE_LEVEL_SEVERE 4
 
-#define TRACE_LEVEL TRACE_LEVEL_WARNING
+#ifdef _DEBUG
+    #define TRACE_LEVEL TRACE_LEVEL_WARNING
+#else
+    #define TRACE_LEVEL TRACE_LEVEL_VERBOSE
+#endif
 
 //Warning disabled: constant comparaison
 #define DbgPrint(Level, Line)                              \

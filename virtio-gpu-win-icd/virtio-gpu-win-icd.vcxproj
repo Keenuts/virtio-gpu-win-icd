@@ -56,12 +56,14 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>WindowsApplicationForDrivers10.0</PlatformToolset>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <TargetVersion>Windows10</TargetVersion>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>WindowsApplicationForDrivers10.0</PlatformToolset>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <TargetVersion>Windows10</TargetVersion>
@@ -75,7 +77,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>WindowsApplicationForDrivers10.0</PlatformToolset>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -105,7 +107,7 @@
       <ModuleDefinitionFile>info.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(OutputPath)opengl32.dll" "C:\Users\Nathan\.babun\cygwin\home\Nathan\Projects\virtio-gpu-win-icd\opengl_tests\opengl_context\x64\Debug\"</Command>
+      <Command>"$(SolutionDir)..\deploy_debug.bat" "$(TargetPath)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -121,7 +123,7 @@
       <ModuleDefinitionFile>info.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(OutputPath)opengl32.dll" $(SolutionDir)\..\opengl_tests\opengl_context\x86\Release\"</Command>
+      <Command>"$(SolutionDir)..\deploy_release.bat" "$(TargetPath)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -129,10 +131,7 @@
       <ModuleDefinitionFile>info.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>
-copy "$(OutputPath)opengl32.dll" "C:\Users\Nathan\Desktop\WinJunk\opengl32.dll"
-copy "$(OutputPath)opengl32.dll" $(SolutionDir)\..\opengl_tests\opengl_context\x64\Release\"
-copy "$(OutputPath)opengl32.dll" $(SolutionDir)\..\test_suite\"</Command>
+      <Command>"$(SolutionDir)..\deploy_release.bat" "$(TargetPath)"</Command>
     </PostBuildEvent>
     <ClCompile>
       <CompileAsWinRT>false</CompileAsWinRT>

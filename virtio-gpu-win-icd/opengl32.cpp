@@ -71,6 +71,7 @@ void WINAPI glColor3f( GLfloat r, GLfloat g, GLfloat b)
 {
     TRACE_IN();
 	GLfloat data[] = { r, g, b };
+
     UNREFERENCED_PARAMETER(data);
     TRACE_OUT();
 }
@@ -87,6 +88,7 @@ void WINAPI glEnd(void)
 void WINAPI glFlush(void)
 {
     TRACE_IN();
+    State::flush();
     TRACE_OUT();
 }
 
@@ -123,6 +125,7 @@ HGLRC WINAPI wglCreateContext(HDC hdc)
     UNREFERENCED_PARAMETER(hdc);
     UINT32 ctx_id;
 
+    VirGL::printHost("[STARTING OPENGL APP]\n");
     CallStateTracker(State::createContext, &ctx_id);
 
     TRACE_OUT();
@@ -153,6 +156,7 @@ BOOL WINAPI wglDeleteContext(HGLRC hglrc)
     if (res)
         DbgPrint(TRACE_LEVEL_WARNING, ("[!] %s: state-tracker returned the error %d(%s)\n", __FUNCTION__, res, State::errorToStr(res)));
 
+    VirGL::printHost("[ENDING OPENGL APP]\n");
     TRACE_OUT();
 	return res == STATUS_SUCCESS;
 }

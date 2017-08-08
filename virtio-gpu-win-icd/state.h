@@ -8,11 +8,6 @@
 
 namespace State
 {
-    struct model_component_t {
-        float r, g, b;
-        float x, y, z;
-    };
-
     struct OpenGLState
     {
         BOOL restricted;
@@ -22,13 +17,15 @@ namespace State
         UINT32 clear_stencil;
 
         UINT32 framebuffer_id;
-        UINT32 fragshader_id;
-        UINT32 vertshader_id;
-        UINT32 dsa_id;
+        UINT32 frag_shader_id;
+        UINT32 vert_shader_id;
+        UINT32 rasterizer_id;
+        UINT32 blend_id;
 
         UINT32 vertex_buffer_id;
 
-        std::vector<model_component_t> *model_builder;
+        std::vector<float> *vertex_array;
+        std::vector<float> *color_array;
 
         OpenGLState();
     };
@@ -45,6 +42,8 @@ namespace State
 
     INT begin(VOID);
     INT end(VOID);
+
+    INT flush(VOID);
 
     CONST CHAR* errorToStr(INT error);
 }

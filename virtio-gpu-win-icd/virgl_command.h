@@ -41,6 +41,22 @@ namespace VirGL
         UINT32 flags;
     } RESOURCE_CREATION;
 
+    typedef struct _INLINE_WRITE {
+        UINT32 handle;
+        UINT32 data_len;
+        VOID *data;
+        UINT32 level;
+        UINT32 usage;
+        UINT32 stride;
+        UINT32 layer_stride;
+        UINT32 x;
+        UINT32 y;
+        UINT32 z;
+        UINT32 width;
+        UINT32 height;
+        UINT32 depth;
+    } INLINE_WRITE;
+
     typedef UINT32 GPU_3D_CMD;
     typedef GPU_3D_CMD* PGPU_3D_CMD;
 
@@ -51,7 +67,7 @@ namespace VirGL
 
         VirglCommandBuffer(UINT32 vgl_ctx);
 
-        BOOL submitCommandBuffer();
+        INT submitCommandBuffer();
 
         VOID createSubContext(UINT32 sub_ctx);
         VOID setCurrentSubContext(UINT32 sub_ctx);
@@ -60,9 +76,16 @@ namespace VirGL
         /* UNTESTED */
         VOID clear(FLOAT rgba[4], double depth, UINT32 stencil);
         VOID setViewportState(FLOAT scale[3], FLOAT translation[3]);
-        VOID createObject(UINT32 type, UINT32 handle, UINT32 size);
+
+        VOID createObject(UINT32 handle, UINT32 type, std::vector<UINT32>& args);
+        VOID bindObject(UINT32 handle, UINT32 type);
+        VOID bindShader(UINT32 handle, UINT32 type);
+
+        VOID inlineWrite(INLINE_WRITE data);
+
         VOID setFramebuffer(UINT32 handle, UINT32 zbuff_handle);
         VOID drawVBO(VBO_SETTINGS vbo);
+
     };
 
     VOID printHost(const char* message);

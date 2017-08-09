@@ -16,6 +16,7 @@ namespace State
 #define DEFAULT_RASTERIZER_HANDLE 6
 #define DEFAULT_BLEND_HANDLE 7
 #define DEFAULT_VERTEX_BUFFER_HANDLE 9
+#define DEFAULT_COLOR_BUFFER_HANDLE 9
 
     UINT32 current_sub_ctx;
     UINT32 current_vgl_ctx;
@@ -76,6 +77,12 @@ namespace State
 
         restricted = FALSE;
         vertex_buffer = NULL;
+    }
+
+    OpenGLState::~OpenGLState()
+    {
+        if (vertex_buffer)
+            delete vertex_buffer;
     }
 
     VOID initializeState(VOID)
@@ -438,6 +445,43 @@ namespace State
     static INT loadDefaultBlend(VOID)
     {
         TRACE_IN();
+
+        BOOL res = 0;
+        VirGL::RESOURCE_CREATION info;
+        VirGL::VirglCommandBuffer cmd(current_vgl_ctx);
+
+        UINT32 handle = DEFAULT_BLEND_HANDLE;
+        UINT32 bitfield_1 = 0;
+        UINT32 bitfield_2 = 0;
+        UINT32 bitfield_3 = 0;
+        std::vector<UINT32> create_info(11);
+
+        memset(&info, 0, sizeof(VirGL::RESOURCE_CREATION));
+        info.target = 2;
+        info.array_size = 1;
+        info.bind = 0xa;
+        info.depth = 1;
+        info.width = 616;
+        info.height = 31;
+        info.handle = handle;
+        info.format = 0xb1;
+
+        VirGL::createResource3d(current_vgl_ctx, info);
+        VirGL::attachResource(current_vgl_ctx, handle);
+
+        bitfield_1 |= 1 << 2;
+        bitfield_3 |= 0xf << 27;
+
+        for (UINT32 i = 0; i < 11; i++)
+            create_info[i] = 0;
+        create_info[0] = handle;
+        create_info[1] = bitfield_1;
+        create_info[2] = bitfield_2;
+        create_info[3] = bitfield_3;
+
+        cmd.createObject(handle, VIRGL_OBJECT_BLEND, create_info);
+        cmd.bindObject(handle, VIRGL_OBJECT_BLEND);
+        res = cmd.submitCommandBuffer();
 
         TRACE_OUT();
         return STATUS_SUCCESS;

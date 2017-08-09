@@ -27,6 +27,7 @@ namespace State
         UniformBuffer<float> *vertex_buffer;
 
         OpenGLState();
+        ~OpenGLState();
     };
 
     VOID initializeState(VOID);

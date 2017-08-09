@@ -77,12 +77,15 @@ namespace State
 
         restricted = FALSE;
         vertex_buffer = NULL;
+        color_buffer = NULL;
     }
 
     OpenGLState::~OpenGLState()
     {
         if (vertex_buffer)
             delete vertex_buffer;
+        if (color_buffer)
+	        delete color_buffer;
     }
 
     VOID initializeState(VOID)
@@ -239,10 +242,19 @@ namespace State
 
         states[current_sub_ctx]->restricted = TRUE;
 
-        if (!states[current_sub_ctx]->vertex_buffer)
+        if (!states[current_sub_ctx]->vertex_buffer) {
             states[current_sub_ctx]->vertex_buffer = new UniformBuffer<float>(current_vgl_ctx, DEFAULT_VERTEX_BUFFER_HANDLE, 0x10);
+            assert(states[current_sub_ctx]->vertex_buffer != NULL);
+        }
         else
             states[current_sub_ctx]->vertex_buffer->clear();
+
+        if (!states[current_sub_ctx]->color_buffer) {
+            states[current_sub_ctx]->color_buffer = new UniformBuffer<float>(current_vgl_ctx, DEFAULT_COLOR_BUFFER_HANDLE, 0x10);
+            assert(states[current_sub_ctx]->color_buffer != NULL);
+        }
+        else
+            states[current_sub_ctx]->color_buffer->clear();
 
         return STATUS_SUCCESS;
     }
@@ -264,21 +276,25 @@ namespace State
         if (!states[current_sub_ctx]->restricted)
             return STATE_ERROR_NOT_ALLOWED;
 
-        UNREFERENCED_PARAMETER(v);
-        DbgPrint(TRACE_LEVEL_WARNING, ("[!] Color are not implemented yet !\n"));
+        states[current_sub_ctx]->color_buffer->push(v);
 
         return STATUS_SUCCESS;
     }
 
     INT end(VOID)
     {
+        INT res;
+
         CHECK_VALID_CTX(stages, current_sub_ctx);
         if (!states[current_sub_ctx]->restricted)
             return STATE_ERROR_NOT_ALLOWED;
 
         states[current_sub_ctx]->restricted = FALSE;
         
-        states[current_sub_ctx]->vertex_buffer->flush();
+        res = states[current_sub_ctx]->vertex_buffer->flush();
+        assert(res == STATUS_SUCCESS);
+        res = states[current_sub_ctx]->color_buffer->flush();
+        assert(res == STATUS_SUCCESS);
 
         return STATUS_SUCCESS;
     }

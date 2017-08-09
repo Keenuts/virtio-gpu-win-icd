@@ -25,6 +25,7 @@ namespace State
         UINT32 blend_id;
 
         UniformBuffer<float> *vertex_buffer;
+        UniformBuffer<float> *color_buffer;
 
         OpenGLState();
         ~OpenGLState();

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <vector>
+
+#include "uniform_buffer.h"
 #include "win_types.h"
 
 #define MAX_STATE_COUNT 3
@@ -22,10 +24,7 @@ namespace State
         UINT32 rasterizer_id;
         UINT32 blend_id;
 
-        UINT32 vertex_buffer_id;
-
-        std::vector<float> *vertex_array;
-        std::vector<float> *color_array;
+        UniformBuffer<float> *vertex_buffer;
 
         OpenGLState();
     };
@@ -41,6 +40,10 @@ namespace State
     INT clearStencil(UINT32 s);
 
     INT begin(VOID);
+
+    INT push_color(float v);
+    INT push_vertex(float v);
+
     INT end(VOID);
 
     INT flush(VOID);

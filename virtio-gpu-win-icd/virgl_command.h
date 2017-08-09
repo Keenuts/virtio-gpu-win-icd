@@ -92,7 +92,12 @@ namespace VirGL
 
     VOID createContext(UINT32 vgl_ctx);
     VOID deleteContext(UINT32 vgl_ctx);
-    VOID create_resource_2d(UINT32 ctx_id, UINT32 res_id, UINT32 format, UINT32 width, UINT32 height);
-    VOID create_resource_3d(UINT32 ctx_id, RESOURCE_CREATION info);
-    VOID attach_resource(UINT32 ctx_id, UINT32 res_id);
+
+    VOID createResource2d(UINT32 ctx_id, UINT32 res_id, UINT32 format, UINT32 width, UINT32 height);
+    VOID createResource3d(UINT32 ctx_id, RESOURCE_CREATION info);
+    VOID attachResource(UINT32 ctx_id, UINT32 res_id);
+
+    VOID detachResource(UINT32 ctx_id, UINT32 res_id);
+    VOID unrefResource(UINT32 res_id);
 }
+

@@ -70,9 +70,22 @@ void WINAPI glClearStencil(GLint stencil)
 void WINAPI glColor3f( GLfloat r, GLfloat g, GLfloat b)
 {
     TRACE_IN();
-	GLfloat data[] = { r, g, b };
 
-    UNREFERENCED_PARAMETER(data);
+    State::push_color((float)r);
+    State::push_vertex((float)g);
+    State::push_vertex((float)b);
+
+    TRACE_OUT();
+}
+
+void WINAPI glVertex2i( GLint x, GLint y )
+{
+    TRACE_IN();
+
+    State::push_vertex((float)x);
+    State::push_vertex((float)y);
+    State::push_vertex((float)0);
+
     TRACE_OUT();
 }
 
@@ -89,14 +102,6 @@ void WINAPI glFlush(void)
 {
     TRACE_IN();
     State::flush();
-    TRACE_OUT();
-}
-
-void WINAPI glVertex2i( GLint x, GLint y )
-{
-    TRACE_IN();
-    UNREFERENCED_PARAMETER(x);
-    UNREFERENCED_PARAMETER(y);
     TRACE_OUT();
 }
 

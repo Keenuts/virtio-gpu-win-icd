@@ -207,3 +207,21 @@ typedef struct virtio_gpu_submit_3d {
     UINT32 padding;
 }GPU_SUBMIT_3D, *PGPU_SUBMIT_3D;
 #pragma pack()
+
+/* VIRTIO_GPU_CMD_CTX_DETACH_RESOURCE: detach a resource from a context*/
+#pragma pack(1)
+typedef struct virtio_gpu_resource_detach {
+    GPU_CTRL_HDR hdr;
+    ULONG resource_id;
+    ULONG padding;
+}GPU_RES_DETACH, *PGPU_RES_DETACH;
+#pragma pack()
+
+/* VIRTIO_GPU_CMD_RESOURCE_UNREF: free a resource on the host*/
+#pragma pack(1)
+typedef struct virtio_gpu_resource_unref {
+    GPU_CTRL_HDR hdr;
+    ULONG resource_id;
+    ULONG padding;
+}GPU_RES_UNREF, *PGPU_RES_UNREF;
+#pragma pack()

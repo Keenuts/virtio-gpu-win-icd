@@ -1,6 +1,8 @@
 #include "debug.h"
+#include "driver_api.h"
 #include "state.h"
 #include "tmp_const.h"
+#include "uniform_buffer.h"
 #include "virgl.h"
 #include "virgl_command.h"
 #include "win_types.h"
@@ -13,6 +15,7 @@ namespace State
 #define DEFAULT_VERT_HANDLE 5
 #define DEFAULT_RASTERIZER_HANDLE 6
 #define DEFAULT_BLEND_HANDLE 7
+#define DEFAULT_VERTEX_BUFFER_HANDLE 9
 
     UINT32 current_sub_ctx;
     UINT32 current_vgl_ctx;
@@ -70,11 +73,9 @@ namespace State
         vert_shader_id = 0;
         rasterizer_id = 0;
         blend_id = 0;
-        vertex_buffer_id = 0;
 
         restricted = FALSE;
-        vertex_array = NULL;
-        color_array = NULL;
+        vertex_buffer = NULL;
     }
 
     VOID initializeState(VOID)
@@ -230,8 +231,35 @@ namespace State
             return STATE_ERROR_NOT_ALLOWED;
 
         states[current_sub_ctx]->restricted = TRUE;
-        states[current_sub_ctx]->vertex_array = new std::vector<float>();
-        states[current_sub_ctx]->color_array = new std::vector<float>();
+
+        if (!states[current_sub_ctx]->vertex_buffer)
+            states[current_sub_ctx]->vertex_buffer = new UniformBuffer<float>(current_vgl_ctx, DEFAULT_VERTEX_BUFFER_HANDLE, 0x10);
+        else
+            states[current_sub_ctx]->vertex_buffer->clear();
+
+        return STATUS_SUCCESS;
+    }
+
+    INT push_vertex(float v)
+    {
+        CHECK_VALID_CTX(stages, current_sub_ctx);
+        if (!states[current_sub_ctx]->restricted)
+            return STATE_ERROR_NOT_ALLOWED;
+
+        states[current_sub_ctx]->vertex_buffer->push(v);
+
+        return STATUS_SUCCESS;
+    }
+
+    INT push_color(float v)
+    {
+        CHECK_VALID_CTX(stages, current_sub_ctx);
+        if (!states[current_sub_ctx]->restricted)
+            return STATE_ERROR_NOT_ALLOWED;
+
+        UNREFERENCED_PARAMETER(v);
+        DbgPrint(TRACE_LEVEL_WARNING, ("[!] Color are not implemented yet !\n"));
+
         return STATUS_SUCCESS;
     }
 
@@ -242,10 +270,8 @@ namespace State
             return STATE_ERROR_NOT_ALLOWED;
 
         states[current_sub_ctx]->restricted = FALSE;
-        delete states[current_sub_ctx]->vertex_array;
-        delete states[current_sub_ctx]->color_array;
-        states[current_sub_ctx]->vertex_array = NULL;
-        states[current_sub_ctx]->color_array = NULL;
+        
+        states[current_sub_ctx]->vertex_buffer->flush();
 
         return STATUS_SUCCESS;
     }
@@ -262,55 +288,13 @@ namespace State
         info.array_size = 1;
         info.bind = shader_info.binding;
         info.depth = 1;
-        info.width = 65536;
-        info.height = 1;
-        info.handle = handle;
-
-        VirGL::create_resource_3d(current_vgl_ctx, info);
-        VirGL::attach_resource(current_vgl_ctx, handle);
-
-        VirGL::VirglCommandBuffer cmd(current_vgl_ctx);
-
-        UINT32 nb_cells = (UINT32)_CMATH_::ceil((double)shader_info.token_count / 4.0);
-        DbgPrint(TRACE_LEVEL_WARNING, ("Creating a shader contained in %d cells\n", nb_cells));
-
-        std::vector<UINT32> create_info(4 + nb_cells);
-        create_info[0] = shader_info.type;
-        create_info[1] = shader_info.token_count;
-        create_info[2] = shader_info.offlen;
-        create_info[3] = shader_info.num_so_output;
-        for (UINT32 i = 0; i < nb_cells; i++)
-            create_info[i + 4] = shader_info.tokens[i];
-
-        cmd.createObject(handle, VIRGL_OBJECT_SHADER, create_info);
-
-        cmd.bindShader(handle, shader_info.type);
-        res = cmd.submitCommandBuffer();
-
-        if (res != STATUS_SUCCESS)
-            DbgPrint(TRACE_LEVEL_ERROR, ("[!] Unable to load the shader id=0x%x\n", handle));
-        assert(res == STATUS_SUCCESS);
-
-        TRACE_OUT();
-        return STATUS_SUCCESS;
-#if 0
-        assert(shader_info.tokens);
-        assert(shader_info.token_count);
-
-        BOOL res = 0;
-        VirGL::RESOURCE_CREATION info;
-        memset(&info, 0, sizeof(VirGL::RESOURCE_CREATION));
-        info.array_size = 1;
-        info.bind = shader_info.binding;
-        info.depth = 1;
-
         //FIXME: proper size managent ?
         info.width = 65536;
         info.height = 1;
         info.handle = handle;
 
-        VirGL::create_resource_3d(current_vgl_ctx, info);
-        VirGL::attach_resource(current_vgl_ctx, handle);
+        VirGL::createResource3d(current_vgl_ctx, info);
+        VirGL::attachResource(current_vgl_ctx, handle);
 
         VirGL::VirglCommandBuffer cmd(current_vgl_ctx);
 
@@ -336,7 +320,6 @@ namespace State
 
         TRACE_OUT();
         return STATUS_SUCCESS;
-#endif
     }
 
     INT loadDefaultFragmentShader(VOID)
@@ -404,8 +387,8 @@ namespace State
         info.handle = handle;
         info.format = 40;
 
-        VirGL::create_resource_3d(current_vgl_ctx, info);
-        VirGL::attach_resource(current_vgl_ctx, handle);
+        VirGL::createResource3d(current_vgl_ctx, info);
+        VirGL::attachResource(current_vgl_ctx, handle);
 
         VirGL::VirglCommandBuffer cmd(current_vgl_ctx);
 

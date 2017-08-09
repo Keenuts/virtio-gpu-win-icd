@@ -26,6 +26,7 @@
     <ClInclude Include="opengl32.h" />
     <ClInclude Include="state.h" />
     <ClInclude Include="tests.h" />
+    <ClInclude Include="uniform_buffer.h" />
     <ClInclude Include="virgl.h" />
     <ClInclude Include="virgl_command.h" />
     <ClInclude Include="win_types.h" />

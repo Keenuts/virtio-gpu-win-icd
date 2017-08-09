@@ -161,23 +161,7 @@ namespace VirGL
         GPU_3D_CMD head = { 0 };
         const UINT32 length = 1 + (UINT32)args.size();
 
-        std::vector<UINT32> params(10);
-        params.resize(length);
-
-        head = createHeader(VIRGL_CCMD_CREATE_OBJECT, type, length);
-        params[0] = handle;
-        for (UINT32 i = 0; i < args.size(); i++)
-            params[i + 1] = args[i];
-
-        m_commands.push_back(std::pair<GPU_3D_CMD, std::vector<UINT32>>(head, params));
-        m_total_size += sizeof(head) + sizeof(UINT32) * LENGTH_FROM_HEADER(head);
-
-        TRACE_OUT();
-#if 0
-        GPU_3D_CMD head = { 0 };
-        const UINT32 length = 1 + (UINT32)args.size();
         std::vector<UINT32> params(length);
-
         head = createHeader(VIRGL_CCMD_CREATE_OBJECT, type, length);
         params[0] = handle;
         for (UINT32 i = 0; i < args.size(); i++)
@@ -186,7 +170,6 @@ namespace VirGL
         m_commands.push_back(std::pair<GPU_3D_CMD, std::vector<UINT32>>(head, params));
         m_total_size += sizeof(head) + sizeof(UINT32) * LENGTH_FROM_HEADER(head);
 
-#endif
         TRACE_OUT();
     }
 
@@ -236,7 +219,7 @@ namespace VirGL
         const UINT32 length = 11 + info.data_len / sizeof(UINT32);
         std::vector<UINT32> params(length);
 
-        head = createHeader(VIRGL_CCMD_BIND_SHADER, 0, length);
+        head = createHeader(VIRGL_CCMD_RESOURCE_INLINE_WRITE, 0, length);
         params[0] = info.handle;
         params[1] = info.level;
         params[2] = info.usage;
@@ -320,7 +303,7 @@ namespace VirGL
 #else
         UNREFERENCED_PARAMETER(vgl_ctx);
         DbgPrint(TRACE_LEVEL_ERROR, ("BUG BUSTER IN\n"));
-#define LENGTH 50
+#define LENGTH 500
         UINT32 *data = new UINT32[LENGTH];
         if (data)
             DbgPrint(TRACE_LEVEL_ERROR, ("Buffer not null\n"));
@@ -347,7 +330,7 @@ namespace VirGL
         TRACE_OUT();
     }
 
-    VOID create_resource_2d(UINT32 ctx_id, UINT32 res_id, UINT32 format, UINT32 width, UINT32 height)
+    VOID createResource2d(UINT32 ctx_id, UINT32 res_id, UINT32 format, UINT32 width, UINT32 height)
     {
         TRACE_IN();
 
@@ -364,12 +347,12 @@ namespace VirGL
         TRACE_OUT();
     }
 
-    VOID create_resource_3d(UINT32 ctx_id, RESOURCE_CREATION info)
+    VOID createResource3d(UINT32 ctx_id, RESOURCE_CREATION info)
     {
         TRACE_IN();
 
         GPU_RES_CREATE_3D data = { 0 };
-        
+
         data.hdr.ctx_id = ctx_id;
         data.hdr.type = VIRTIO_GPU_CMD_RESOURCE_CREATE_3D;
         data.resource_id = info.handle;
@@ -385,13 +368,10 @@ namespace VirGL
         data.flags = info.flags;
         sendCommand(&data, sizeof(GPU_RES_CREATE_3D));
 
-    VOID allocate_object(UINT32 size, UINT64 *handle);
-    VOID update_object(UINT64 handle, VOID *data, UINT64 size);
-    VOID destroy_object(UINT64 handle);
         TRACE_OUT();
     }
 
-    VOID attach_backing(UINT32 ctx_id, UINT32 res_id, UINT32 nr_entries)
+    VOID attachBacking(UINT32 ctx_id, UINT32 res_id, UINT32 nr_entries)
     {
         TRACE_IN();
 
@@ -406,7 +386,7 @@ namespace VirGL
         TRACE_OUT();
     }
 
-    VOID attach_resource(UINT32 ctx_id, UINT32 res_id)
+    VOID attachResource(UINT32 ctx_id, UINT32 res_id)
     {
         TRACE_IN();
 
@@ -416,6 +396,31 @@ namespace VirGL
         info.resource_id = res_id;
         sendCommand(&info, sizeof(info));
 
+        TRACE_OUT();
+    }
+
+    VOID detachResource(UINT32 ctx_id, UINT32 res_id)
+    {
+        TRACE_IN();
+
+        GPU_RES_DETACH info = { 0 };
+        info.hdr.ctx_id = ctx_id;
+        info.hdr.type = VIRTIO_GPU_CMD_CTX_DETACH_RESOURCE;
+        info.resource_id = res_id;
+        sendCommand(&info, sizeof(info));
+
+        TRACE_OUT();
+    }
+
+    VOID unrefResource(UINT32 res_id)
+    {
+        TRACE_IN();
+
+        GPU_RES_UNREF info = { 0 };
+        info.hdr.type = VIRTIO_GPU_CMD_RESOURCE_UNREF;
+        info.resource_id = res_id;
+        sendCommand(&info, sizeof(info));
+        
         TRACE_OUT();
     }
 }

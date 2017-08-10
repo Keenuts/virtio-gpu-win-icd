@@ -82,6 +82,7 @@ namespace VirGL
         VOID bindShader(UINT32 handle, UINT32 type);
 		VOID setViewportState(UINT32 start_slot, std::vector<FLOAT>& values);
 		VOID setFramebufferState(UINT32 nb_cbuf, UINT32 zsurf_handle, std::vector<UINT32>& surf_handles);
+		VOID setConstantBuffer(UINT32 shader_type, UINT32 index, std::vector<float> constants);
 
         VOID inlineWrite(INLINE_WRITE data);
 

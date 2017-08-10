@@ -256,6 +256,28 @@ namespace VirGL
 		TRACE_OUT();
 	}
 
+	VOID VirglCommandBuffer::setConstantBuffer(UINT32 shader_type, UINT32 index, std::vector<float> constants)
+	{
+        TRACE_IN();
+
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] Set constant buffer for shader type %d\n", shader_type));
+
+		GPU_3D_CMD head = { 0 };
+		const UINT32 length = 2 + (UINT32)constants.size();
+		std::vector<UINT32> params(length);
+
+		head = createHeader(VIRGL_CCMD_SET_CONSTANT_BUFFER, 0, length);
+		params[0] = shader_type;
+		params[1] = index;
+		for (UINT32 i = 0; i < (UINT32)constants.size(); i++)
+			params[i + 2] = (UINT32)constants[i];
+
+        m_commands.push_back(std::pair<GPU_3D_CMD, std::vector<UINT32>>(head, params));
+        m_total_size += sizeof(head) + sizeof(UINT32) * LENGTH_FROM_HEADER(head);
+
+		TRACE_OUT();
+	}
+
     VOID VirglCommandBuffer::inlineWrite(INLINE_WRITE info)
     {
         TRACE_IN();

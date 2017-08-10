@@ -209,6 +209,30 @@ namespace VirGL
         TRACE_OUT();
     }
 
+	VOID VirglCommandBuffer::setViewportState(UINT32 start_slot, std::vector<FLOAT>& values)
+	{
+		TRACE_IN();
+
+		assert(values.size() != 0);
+		assert(values.size() % 6 == 0);
+
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] Viewport setting for %u viewports\n", (UINT32)(values.size() / 6)));
+
+		GPU_3D_CMD head = { 0 };
+		const UINT32 length = 1 + (UINT32)values.size();
+		std::vector<UINT32> params(length);
+
+		head = createHeader(VIRGL_CCMD_SET_VIEWPORT_STATE, 0, length);
+		params[0] = start_slot;
+		for (UINT32 i = 0; i < (UINT32)values.size(); i++)
+			params[i + 1] = (UINT32)values[i];
+
+        m_commands.push_back(std::pair<GPU_3D_CMD, std::vector<UINT32>>(head, params));
+        m_total_size += sizeof(head) + sizeof(UINT32) * LENGTH_FROM_HEADER(head);
+
+		TRACE_OUT();
+	}
+
     VOID VirglCommandBuffer::inlineWrite(INLINE_WRITE info)
     {
         TRACE_IN();

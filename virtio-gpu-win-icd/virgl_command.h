@@ -80,6 +80,7 @@ namespace VirGL
         VOID createObject(UINT32 handle, UINT32 type, std::vector<UINT32>& args);
         VOID bindObject(UINT32 handle, UINT32 type);
         VOID bindShader(UINT32 handle, UINT32 type);
+		VOID setViewportState(UINT32 start_slot, std::vector<FLOAT>& values);
 
         VOID inlineWrite(INLINE_WRITE data);
 

@@ -233,6 +233,29 @@ namespace VirGL
 		TRACE_OUT();
 	}
 
+	VOID VirglCommandBuffer::setFramebufferState(UINT32 nb_cbuf, UINT32 zsurf_handle, std::vector<UINT32>& surf_handles)
+	{
+		TRACE_IN();
+
+		assert(surf_handles.size() == nb_cbuf);
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] Franebuffer setting for %u viewports\n", (UINT32)surf_handles.size()));
+
+		GPU_3D_CMD head = { 0 };
+		const UINT32 length = 2 + (UINT32)surf_handles.size();
+		std::vector<UINT32> params(length);
+
+		head = createHeader(VIRGL_CCMD_SET_FRAMEBUFFER_STATE, 0, length);
+		params[0] = nb_cbuf;
+		params[1] = zsurf_handle;
+		for (UINT32 i = 0; i < (UINT32)surf_handles.size(); i++)
+			params[i + 2] = (UINT32)surf_handles[i];
+
+        m_commands.push_back(std::pair<GPU_3D_CMD, std::vector<UINT32>>(head, params));
+        m_total_size += sizeof(head) + sizeof(UINT32) * LENGTH_FROM_HEADER(head);
+
+		TRACE_OUT();
+	}
+
     VOID VirglCommandBuffer::inlineWrite(INLINE_WRITE info)
     {
         TRACE_IN();
@@ -262,17 +285,6 @@ namespace VirGL
 
         m_commands.push_back(std::pair<GPU_3D_CMD, std::vector<UINT32>>(head, params));
         m_total_size += sizeof(head) + sizeof(UINT32) * LENGTH_FROM_HEADER(head);
-
-        TRACE_OUT();
-    }
-
-    VOID VirglCommandBuffer::setFramebuffer(UINT32 handle, UINT32 zbuff_handle)
-    {
-        TRACE_IN();
-        DbgPrint(TRACE_LEVEL_INFO, ("[?] set framebuffer\n"));
-
-        UNREFERENCED_PARAMETER(handle);
-        UNREFERENCED_PARAMETER(zbuff_handle);
 
         TRACE_OUT();
     }

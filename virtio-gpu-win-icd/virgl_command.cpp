@@ -314,11 +314,31 @@ namespace VirGL
     VOID VirglCommandBuffer::drawVBO(VBO_SETTINGS vbo)
     {
         TRACE_IN();
-        DbgPrint(TRACE_LEVEL_INFO, ("[?] Draw VBO\n"));
 
-        UNREFERENCED_PARAMETER(vbo);
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] Drawing a VBO\n"));
 
-        TRACE_OUT();
+		GPU_3D_CMD head = { 0 };
+		const UINT32 length = 12;
+		std::vector<UINT32> params(length);
+
+		head = createHeader(VIRGL_CCMD_DRAW_VBO, 0, length);
+		params[0] = vbo.start;
+		params[1] = vbo.count;
+		params[2] = vbo.mode;
+		params[3] = vbo.indexed;
+		params[4] = vbo.instance_count;
+		params[5] = vbo.index_bias;
+		params[6] = vbo.start_instance;
+		params[7] = vbo.primitive_restart;
+		params[8] = vbo.restart_index;
+		params[9] = vbo.min_index;
+		params[10] = vbo.max_index;
+		params[11] = vbo.cso;
+
+        m_commands.push_back(std::pair<GPU_3D_CMD, std::vector<UINT32>>(head, params));
+        m_total_size += sizeof(head) + sizeof(UINT32) * LENGTH_FROM_HEADER(head);
+
+		TRACE_OUT();
     }
 
     VOID printHost(const char* message)

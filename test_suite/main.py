@@ -91,7 +91,7 @@ def validate_dump(name, opt, expected):
 
   f.close()
 
-  if i < len(expected):
+  if i < len(expected) and not opt.quiet:
       print("[!] Expected another command (%s)" % expected[i])
 
   return passed and i == len(expected)
@@ -135,23 +135,28 @@ def main():
         if options.verbose:
           print("\n\n[?] Running test '%s'\n" % test['name'])
 
-        if not run_test(options, test):
-          print("[!] Failed test '%s'" % test['name'])
-        else:
+        if run_test(options, test):
           passed += 1
+        elif not options.quiet:
+          print("[!] Failed test '%s'" % test['name'])
+
       except FileNotFoundError:
-        print("[!] No file '%s'.\n[!] File removed from count." % a)
+        if not options.quiet:
+          print("[!] No file '%s'.\n[!] File removed from count." % a)
         count -= 1
       except json.decoder.JSONDecodeError as e:
-        print("[!] Invalid JSON '%s':%s.\n[!] File removed from count." % (a, e))
+        if not options.quiet:
+          print("[!] Invalid JSON '%s':%s.\n[!] File removed from count." % (a, e))
         count -= 1
       except PermissionError:
-        print("[!] Cannot open the file '%s'.\n[!] File removed from count." % a)
+        if not options.quiet:
+          print("[!] Cannot open the file '%s'.\n[!] File removed from count." % a)
         count -= 1
 
     if options.verbose:
       print("\n==========")
-    print("%d/%d test passed." % (passed, count))
+    if not options.quiet:
+      print("%d/%d test passed." % (passed, count))
     exit(count != passed)
 
 main()

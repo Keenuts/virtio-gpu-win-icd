@@ -65,7 +65,7 @@ def validate_dump(name, opt, expected):
       break
 
     for j in range(0, len(cmd)):
-      if str(cmd[j]) != str(expected[i][j]):
+      if expected[i][j] != "*" and str(cmd[j]) != str(expected[i][j]):
         passed = False
         if not opt.quiet:
           print("[!] %s: At %d: expected '%s' got '%s'" % (name, j, expected[i][j], cmd[j]))

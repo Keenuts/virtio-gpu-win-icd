@@ -41,6 +41,7 @@ def validate_dump(name, opt, expected):
   passed = True
   f = open(DUMP_FILE, "rb")
   f_size = os.fstat(f.fileno()).st_size
+  wildcards = {}
   
   i = 0
   while passed and f.tell() < f_size:
@@ -65,10 +66,25 @@ def validate_dump(name, opt, expected):
       break
 
     for j in range(0, len(cmd)):
-      if expected[i][j] != "*" and str(cmd[j]) != str(expected[i][j]):
+      exp_token = str(expected[i][j])
+      rcv_token = str(cmd[j])
+
+      if "*" in exp_token:
+        if exp_token == "*":
+          pass
+        elif exp_token not in wildcards:
+          wildcards[exp_token] = rcv_token
+          if opt.verbose:
+            print("[?] Saving item %s at %s" % (rcv_token, exp_token))
+        elif wildcards[exp_token] != rcv_token:
+          passed = False
+          if not opt.quiet:
+            print("[!] %s: At %d: expected '%s' got '%s'"
+              % (name, j, wildcards[exp_token], rcv_token))
+      elif rcv_token != exp_token:
         passed = False
         if not opt.quiet:
-          print("[!] %s: At %d: expected '%s' got '%s'" % (name, j, expected[i][j], cmd[j]))
+          print("[!] %s: At %d: expected '%s' got '%s'" % (name, j, exp_token, rcv_token))
         break
 
     i += 1

@@ -25,6 +25,8 @@ def call_function(name, args):
     getattr(dll, name)(c_float(args[0]), c_float(args[1]), c_float(args[2]), c_float(args[3]))
   elif name == "glClearDepth":
     getattr(dll, name)(c_double(args[0]))
+  elif name == "glColor3f":
+    getattr(dll, name)(c_float(args[0]), c_float(args[1]), c_float(args[2]))
   else:
     getattr(dll, name)(*args)
 
@@ -62,7 +64,7 @@ def validate_dump(name, opt, expected):
     if len(cmd) != len(expected[i]):
       passed = False
       if not opt.quiet:
-        print("[!] %s: Expected %s got %s." % (name, expected[i], cmd))
+        print("[!] %s:\n\tExpected\t%s\n\tgot\t\t%s." % (name, expected[i], cmd))
       break
 
     for j in range(0, len(cmd)):
@@ -79,12 +81,12 @@ def validate_dump(name, opt, expected):
         elif wildcards[exp_token] != rcv_token:
           passed = False
           if not opt.quiet:
-            print("[!] %s: At %d: expected '%s' got '%s'"
-              % (name, j, wildcards[exp_token], rcv_token))
+            print("[!] %s: At (%d, %d): expected '%s' got '%s'"
+              % (name, i, j, wildcards[exp_token], rcv_token))
       elif rcv_token != exp_token:
         passed = False
         if not opt.quiet:
-          print("[!] %s: At %d: expected '%s' got '%s'" % (name, j, exp_token, rcv_token))
+          print("[!] %s: At (%d,%d)[%s]: expected '%s' got '%s'" % (name, i, j, cmd[0], exp_token, rcv_token))
         break
 
     i += 1

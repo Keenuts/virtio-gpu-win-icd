@@ -122,6 +122,39 @@ def submit_3d(f, hdr, type, size):
 
   return output
 
+def attach_resource(f, hdr, type, size):
+  handle = struct.unpack('<I', f.read(4))[0]
+  padding = struct.unpack('<I', f.read(4))[0]
+
+  return [ type.name, hdr.ctx_id , handle]
+
+def resource_create_2d(f, hdr, type, size):
+  resource_id = struct.unpack('<I', f.read(4))[0]
+  format = struct.unpack('<I', f.read(4))[0]
+  width = struct.unpack('<I', f.read(4))[0]
+  height = struct.unpack('<I', f.read(4))[0]
+
+  return [type.name, resource_id, format, width, height]
+
+def resource_create_3d(f, hdr, type, size):
+  resource_id = struct.unpack('<I', f.read(4))[0]
+  target = struct.unpack('<I', f.read(4))[0]
+  format = struct.unpack('<I', f.read(4))[0]
+  bind = struct.unpack('<I', f.read(4))[0]
+  width = struct.unpack('<I', f.read(4))[0]
+  height = struct.unpack('<I', f.read(4))[0]
+  depth = struct.unpack('<I', f.read(4))[0]
+  array_size = struct.unpack('<I', f.read(4))[0]
+  last_level = struct.unpack('<I', f.read(4))[0]
+  nr_samples = struct.unpack('<I', f.read(4))[0]
+  flags = struct.unpack('<I', f.read(4))[0]
+  padding = struct.unpack('<I', f.read(4))[0]
+
+  return [ type.name, resource_id, target, format, bind, width,
+    height, depth, array_size, last_level, nr_samples, flags]
+
+  
+
 def unimplemented(f, hdr, type, size):
   print("Not implemented: %s" % type.name)
   f.read(size);
@@ -152,6 +185,12 @@ def parse_cmd(f):
     return ctx_destroy(f, hdr, type, size)
   elif type == virgl.CTRL_TYPE.SUBMIT_3D:
     return submit_3d(f, hdr, type, size)
+  elif type == virgl.CTRL_TYPE.CTX_ATTACH_RESOURCE:
+    return attach_resource(f, hdr, type, size)
+  elif type == virgl.CTRL_TYPE.RESOURCE_CREATE_2D:
+    return resource_create_2d(f, hdr, type, size)
+  elif type == virgl.CTRL_TYPE.RESOURCE_CREATE_3D:
+    return resource_create_3d(f, hdr, type, size)
   else:
     return unimplemented(f, hdr, type, size)
 

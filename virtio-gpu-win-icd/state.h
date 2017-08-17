@@ -2,14 +2,23 @@
 
 #include <vector>
 
+#include "virgl_command.h"
 #include "uniform_buffer.h"
 #include "win_types.h"
 
 #define MAX_STATE_COUNT 3
 
+#define DEFAULT_VGL_CTX 2
+#define DEFAULT_FRAMEBUFFER_HANDLE 0
+#define DEFAULT_FRAG_HANDLE 4
+#define DEFAULT_VERT_HANDLE 5
+#define DEFAULT_RASTERIZER_HANDLE 6
+#define DEFAULT_BLEND_HANDLE 7
+#define DEFAULT_VERTEX_ELEMENTS_HANDLE 8
 
 namespace State
 {
+
     struct OpenGLState
     {
         BOOL restricted;
@@ -26,6 +35,12 @@ namespace State
 
         UniformBuffer<float> *vertex_buffer;
         UniformBuffer<float> *color_buffer;
+
+        VirGL::RESOURCE_CREATION *frag_shader_info;
+        VirGL::RESOURCE_CREATION *vert_shader_info;
+        VirGL::RESOURCE_CREATION *rasterizer_info;
+        VirGL::RESOURCE_CREATION *blend_info;
+        VirGL::RESOURCE_CREATION *vertex_elements_info;
 
         OpenGLState();
         ~OpenGLState();
@@ -49,6 +64,14 @@ namespace State
     INT end(VOID);
 
     INT flush(VOID);
+
+    INT createDefaultFragmentShader(VOID);
+    INT createDefaultVertexShader(VOID);
+    INT createDefaultRasterizer(VOID);
+    INT createDefaultBlend(VOID);
+    INT createDefaultVertexElements(VOID);
+
+    INT SetupDefaultBlend(VOID);
 
     CONST CHAR* errorToStr(INT error);
 }

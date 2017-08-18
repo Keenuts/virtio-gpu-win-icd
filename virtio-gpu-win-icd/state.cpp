@@ -23,20 +23,6 @@ namespace State
         STATE_ERROR_NOT_ALLOWED,
     };
 
-    enum ObjectType {
-        VERT_SHADER_TYPE = 0,
-        FRAG_SHADER_TYPE = 1,
-    };
-
-    typedef struct _SHADER_INFO {
-        UINT32 type;
-        UINT32 binding;
-        UINT32 *tokens;
-        UINT32 token_count;
-        UINT32 offlen;
-        UINT32 num_so_output;
-    } SHADER_INFO;
-
     CONST CHAR* errorToStr(INT error)
     {
 #define ERRTOSTR(Error) case Error: return #Error
@@ -67,6 +53,7 @@ namespace State
         rasterizer_id = 0;
         blend_id = 0;
 
+        initialized = FALSE;
         frag_shader_info = NULL;
         vert_shader_info = NULL;
         rasterizer_info = NULL;
@@ -192,7 +179,9 @@ namespace State
         if (states[current_sub_ctx]->restricted)
             return STATE_ERROR_NOT_ALLOWED;
 
-        flush();
+        if (!states[current_sub_ctx]->initialized)
+            return STATUS_SUCCESS;
+
         VirGL::VirglCommandBuffer cmd(current_vgl_ctx);
 
         cmd.clear(states[current_sub_ctx]->clear_color,
@@ -284,19 +273,11 @@ namespace State
 
     INT end(VOID)
     {
-        INT res;
-
         CHECK_VALID_CTX(stages, current_sub_ctx);
         if (!states[current_sub_ctx]->restricted)
             return STATE_ERROR_NOT_ALLOWED;
 
         states[current_sub_ctx]->restricted = FALSE;
-        
-        res = states[current_sub_ctx]->vertex_buffer->flush();
-        assert(res == STATUS_SUCCESS);
-        res = states[current_sub_ctx]->color_buffer->flush();
-        assert(res == STATUS_SUCCESS);
-
         return STATUS_SUCCESS;
     }
 
@@ -308,27 +289,61 @@ namespace State
             return STATE_ERROR_NOT_ALLOWED;
 
         INT res = 0;
+        VirGL::VirglCommandBuffer cmd(current_vgl_ctx);
+        cmd.setCurrentSubContext(0);
 
-        if (states[current_sub_ctx]->frag_shader_info == NULL)
+        if (!states[current_sub_ctx]->initialized) {
+            std::vector<UINT32> args(4);
+            args[0] = 0x5;
+            args[1] = 0x1;
+            args[2] = 0x0;
+            args[3] = 0x0;
+            cmd.createObject(2, VIRGL_OBJECT_SURFACE, args);
+
+            args.resize(4);
+            args[0] = 0x0;
+            args[1] = 0x0;
+            args[2] = 0x0;
+            args[3] = 0x0;
+            cmd.createObject(3, VIRGL_OBJECT_DSA, args);
+            cmd.bindObject(3, VIRGL_OBJECT_DSA);
+            states[current_sub_ctx]->initialized = TRUE;
+        }
+
+        if (states[current_sub_ctx]->frag_shader_info == NULL) {
             res = createDefaultFragmentShader();
+            assert(res == STATUS_SUCCESS);
+            res = loadDefaultFragmentShader(cmd);
+
+        }
         assert(res == STATUS_SUCCESS);
 
-        if (states[current_sub_ctx]->vert_shader_info == NULL)
+        if (states[current_sub_ctx]->vert_shader_info == NULL) {
             res = createDefaultVertexShader();
+            assert(res == STATUS_SUCCESS);
+            res = loadDefaultVertexShader(cmd);
+        }
         assert(res == STATUS_SUCCESS);
 
-        if (states[current_sub_ctx]->rasterizer_info == NULL)
+        if (states[current_sub_ctx]->rasterizer_info == NULL) {
             res = createDefaultRasterizer();
+            assert(res == STATUS_SUCCESS);
+            res = loadDefaultRasterizer(cmd);
+        }
         assert(res == STATUS_SUCCESS);
 
-        if (states[current_sub_ctx]->blend_info == NULL)
+        if (states[current_sub_ctx]->blend_info == NULL) {
             res = createDefaultBlend();
+            assert(res == STATUS_SUCCESS);
+            res = loadDefaultBlend(cmd);
+        }
         assert(res == STATUS_SUCCESS);
 
         if (states[current_sub_ctx]->vertex_elements_info == NULL)
             res = createDefaultVertexElements();
         assert(res == STATUS_SUCCESS);
 
+        res = cmd.submitCommandBuffer();
         assert(res == STATUS_SUCCESS);
         return STATUS_SUCCESS;
     }

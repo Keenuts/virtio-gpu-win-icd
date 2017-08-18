@@ -10,9 +10,9 @@
 #define TRACE_LEVEL_SEVERE 4
 
 #ifdef _DEBUG
-    #define TRACE_LEVEL TRACE_LEVEL_WARNING
+    #define TRACE_LEVEL TRACE_LEVEL_SEVERE
 #else
-    #define TRACE_LEVEL TRACE_LEVEL_VERBOSE
+    #define TRACE_LEVEL TRACE_LEVEL_INFO
 #endif
 
 //Warning disabled: constant comparaison

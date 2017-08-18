@@ -1,5 +1,6 @@
 #include "debug.h"
 #include "state.h"
+#include "tmp_const.h"
 #include "virgl.h"
 #include "virgl_command.h"
 
@@ -9,6 +10,15 @@ namespace State
     extern UINT32 current_sub_ctx;
     extern UINT32 current_vgl_ctx;
     extern OpenGLState *states[MAX_STATE_COUNT];
+
+    typedef struct _SHADER_INFO {
+        UINT32 type;
+        UINT32 *tokens;
+        UINT32 token_count;
+        UINT32 offlen;
+        UINT32 num_so_output;
+    } SHADER_INFO;
+
     /*
     static INT loadShader(UINT32 handle, SHADER_INFO shader_info)
     {
@@ -186,37 +196,77 @@ namespace State
         return STATUS_SUCCESS;
     }
 
-    INT loadDefaultRasterizer(VOID)
+    static INT loadShader(VirGL::VirglCommandBuffer& cmd, UINT32 handle, SHADER_INFO *info)
+    {
+        TRACE_IN();
+
+        UINT32 nb_cells = (UINT32)_CMATH_::ceil((double)info->token_count / 4.0);
+
+        std::vector<UINT32> create_info(4 + nb_cells);
+        create_info[0] = info->type;
+        create_info[1] = info->token_count;
+        create_info[2] = info->offlen;
+        create_info[3] = info->num_so_output;
+        for (UINT32 i = 0; i < nb_cells; i++)
+            create_info[i + 4] = info->tokens[i];
+
+        cmd.createObject(handle, VIRGL_OBJECT_SHADER, create_info);
+        cmd.bindShader(handle, info->type);
+
+        TRACE_OUT();
+        return STATUS_SUCCESS;
+    }
+
+    INT loadDefaultFragmentShader(VirGL::VirglCommandBuffer& cmd)
+    {
+        TRACE_IN();
+
+        UINT32 res = 0;
+        SHADER_INFO info = { 0 };
+        info.type = VIRGL_SHADER_TYPE_FRAGMENT;
+        info.tokens = TmpConst::shader_frag;
+        info.token_count = TmpConst::shader_frag_num_tokens;
+        info.offlen = TmpConst::shader_frag_offlen;
+        info.num_so_output = TmpConst::shader_frag_num_so_output;
+
+        res = loadShader(cmd, DEFAULT_FRAG_HANDLE, &info);
+
+        TRACE_OUT();
+        return res;
+    }
+
+    INT loadDefaultVertexShader(VirGL::VirglCommandBuffer& cmd)
+    {
+        TRACE_IN();
+
+        UINT32 res = 0;
+        SHADER_INFO info = { 0 };
+        info.type = VIRGL_SHADER_TYPE_VERTEX;
+        info.tokens = TmpConst::shader_vert;
+        info.token_count = TmpConst::shader_vert_num_tokens;
+        info.offlen = TmpConst::shader_vert_offlen;
+        info.num_so_output = TmpConst::shader_vert_num_so_output;
+
+        res = loadShader(cmd, DEFAULT_VERT_HANDLE, &info);
+
+        TRACE_OUT();
+        return res;
+    }
+
+    INT loadDefaultRasterizer(VirGL::VirglCommandBuffer& cmd)
     {
         TRACE_IN();
         UINT32 handle = DEFAULT_RASTERIZER_HANDLE;
-
-        BOOL res = 0;
-        VirGL::RESOURCE_CREATION info;
-        memset(&info, 0, sizeof(VirGL::RESOURCE_CREATION));
-        info.array_size = 1;
-        info.bind = 0x20000;
-        info.depth = 1;
-        info.width = 8;
-        info.height = 1;
-        info.handle = handle;
-        info.format = 40;
-
-        VirGL::createResource3d(current_vgl_ctx, info);
-        VirGL::attachResource(current_vgl_ctx, handle);
-
-        VirGL::VirglCommandBuffer cmd(current_vgl_ctx);
 
 #define SET_BIT_AT(Var, Value, Pos) Var = (Var & ~(1 << Pos)) | (Value << Pos)
 
         UINT32 bitfield1 = 0;
         UINT32 bitfield2 = 0;
         SET_BIT_AT(bitfield1, 1, 1); //Enable depth clip
+        SET_BIT_AT(bitfield1, 1, 6); //Enable sprit coord mode
         SET_BIT_AT(bitfield1, 1, 7); //point quad rasterization
-        SET_BIT_AT(bitfield1, 1, 9); //fill front
-        SET_BIT_AT(bitfield1, 1, 15); //offset line
+        SET_BIT_AT(bitfield1, 1, 14); //clamp fragment color
         SET_BIT_AT(bitfield1, 1, 29); // ??
-        SET_BIT_AT(bitfield1, 1, 30); // ??
 
         bitfield2 = 0xffff; //line_stipple_pattern, don't ask me why
 #undef SET_BIT_AT
@@ -229,7 +279,7 @@ namespace State
         create_info[1] = 0x3f800000; //point size = 1.0f
         create_info[2] = 0; //Sprit coord enabled ?
         create_info[3] = bitfield2;
-        create_info[3] = 0x3f800000; //line width = 1.0f
+        create_info[4] = 0x3f800000; //line width = 1.0f
         create_info[5] = 0; // offset units
         create_info[6] = 0; // offset scale
         create_info[7] = 0; //offset clamp
@@ -237,81 +287,33 @@ namespace State
         cmd.createObject(handle, VIRGL_OBJECT_RASTERIZER, create_info);
         cmd.bindObject(handle, VIRGL_OBJECT_RASTERIZER);
 
-        res = cmd.submitCommandBuffer();
-
-        if (res != STATUS_SUCCESS)
-            DbgPrint(TRACE_LEVEL_ERROR, ("[!] Unable to load default Rasterizer %s(0x%x)", errorToStr(res), res));
-        assert(res == STATUS_SUCCESS);
-
-        DbgPrint(TRACE_LEVEL_INFO, ("[?] Default rasterizer loaded\n"));
-        states[current_sub_ctx]->blend_id = handle;
-
         TRACE_OUT();
         return STATUS_SUCCESS;
     }
 
-    INT SetupDefaultBlend(VOID)
+    INT loadDefaultBlend(VirGL::VirglCommandBuffer& cmd)
     {
         TRACE_IN();
-
-        BOOL res = 0;
-        VirGL::RESOURCE_CREATION info;
-        VirGL::VirglCommandBuffer cmd(current_vgl_ctx);
 
         UINT32 handle = DEFAULT_BLEND_HANDLE;
         UINT32 bitfield_1 = 0;
         UINT32 bitfield_2 = 0;
         UINT32 bitfield_3 = 0;
-        std::vector<UINT32> create_info(11);
-
-        memset(&info, 0, sizeof(VirGL::RESOURCE_CREATION));
-        info.target = 2;
-        info.array_size = 1;
-        info.bind = 0xa;
-        info.depth = 1;
-        info.width = 616;
-        info.height = 31;
-        info.handle = handle;
-        info.format = 0xb1;
-
-        VirGL::createResource3d(current_vgl_ctx, info);
-        VirGL::attachResource(current_vgl_ctx, handle);
+        std::vector<UINT32> create_info(10);
 
         bitfield_1 |= 1 << 2;
         bitfield_3 |= 0xf << 27;
 
-        for (UINT32 i = 0; i < 11; i++)
+        for (UINT32 i = 0; i < 10; i++)
             create_info[i] = 0;
-        create_info[0] = handle;
-        create_info[1] = bitfield_1;
-        create_info[2] = bitfield_2;
-        create_info[3] = bitfield_3;
+        create_info[0] = bitfield_1;
+        create_info[1] = bitfield_2;
+        create_info[2] = bitfield_3;
 
         cmd.createObject(handle, VIRGL_OBJECT_BLEND, create_info);
         cmd.bindObject(handle, VIRGL_OBJECT_BLEND);
-        res = cmd.submitCommandBuffer();
 
         TRACE_OUT();
         return STATUS_SUCCESS;
     }
-
-    /*
-    UINT32 handle = DEFAULT_FRAG_HANDLE;
-    SHADER_INFO info = { 0 };
-    info.binding = 262154;
-    info.num_so_output = TmpConst::shader_frag_num_so_output;
-    info.token_count = TmpConst::shader_frag_num_tokens;
-    info.offlen = TmpConst::shader_frag_offlen;
-    info.tokens = TmpConst::shader_frag;
-    info.type = FRAG_SHADER_TYPE;
-
-    INT res = loadShader(handle, info);
-
-    if (res != STATUS_SUCCESS)
-        DbgPrint(TRACE_LEVEL_ERROR, ("[!] Unable to load default frag %s(0x%x)", errorToStr(res), res));
-    assert(res == STATUS_SUCCESS);
-
-    DbgPrint(TRACE_LEVEL_INFO, ("[?] Default fragment shader loaded\n"));
-    states[current_sub_ctx]->frag_shader_id = handle;
-    */
 }

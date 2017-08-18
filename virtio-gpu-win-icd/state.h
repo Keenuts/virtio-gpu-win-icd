@@ -36,6 +36,7 @@ namespace State
         UniformBuffer<float> *vertex_buffer;
         UniformBuffer<float> *color_buffer;
 
+        BOOL initialized;
         VirGL::RESOURCE_CREATION *frag_shader_info;
         VirGL::RESOURCE_CREATION *vert_shader_info;
         VirGL::RESOURCE_CREATION *rasterizer_info;
@@ -71,7 +72,10 @@ namespace State
     INT createDefaultBlend(VOID);
     INT createDefaultVertexElements(VOID);
 
-    INT SetupDefaultBlend(VOID);
+    INT loadDefaultFragmentShader(VirGL::VirglCommandBuffer& cmd);
+    INT loadDefaultVertexShader(VirGL::VirglCommandBuffer& cmd);
+    INT loadDefaultRasterizer(VirGL::VirglCommandBuffer& cmd);
+    INT loadDefaultBlend(VirGL::VirglCommandBuffer& cmd);
 
     CONST CHAR* errorToStr(INT error);
 }

@@ -115,6 +115,12 @@ enum virgl_object_type {
     VIRGL_MAX_OBJECTS,
 };
 
+enum virgl_shader_type {
+    VIRGL_SHADER_TYPE_VERTEX = 0,
+    VIRGL_SHADER_TYPE_FRAGMENT = 1,
+};
+
+
 #pragma pack(1)
 typedef struct virtio_gpu_ctrl_hdr {
     ULONG type;

@@ -30,6 +30,70 @@ def clear(cmd, args):
   buf_idx, r, g, b, a, depth, stencil = struct.unpack("<IffffdI", args)
   return [ virgl.CMD_3D(cmd["cmd"]).name, buf_idx, r, g, b, a, depth, stencil]
 
+def create_blend(cmd, args):
+  handle, bitfield1, bitfield2, \
+    b3_0, b3_1, b3_2, b3_3, b3_4, b3_5, b3_6, b3_7  = struct.unpack("<IIIIIIIIIII", args)
+  return [ "3D_CREATE_BLEND", handle, bitfield1, bitfield2,
+    b3_0, b3_1, b3_2, b3_3, b3_4, b3_5, b3_6, b3_7]
+
+def create_rasterizer(cmd, args):
+  handle, bitfield1, point_size, sprit_coord, bitfield2, \
+    line_width, offset_units, offset_scale, offset_clamp  = struct.unpack("<IIIIIIIII", args)
+  return [ "3D_CREATE_RASTERIZER", handle, bitfield1, point_size,
+    sprit_coord, bitfield2, line_width, offset_units, offset_scale, offset_clamp]
+
+def create_dsa(cmd, args):
+  handle, bitfield1, bitfield2_0, bitfield2_1, \
+    alpha_ref = struct.unpack("<IIIII", args)
+  return [ "3D_CREATE_DSA", handle, bitfield1, bitfield2_0, bitfield2_1, alpha_ref]
+
+def create_shader(cmd, args):
+  handle, shader_type, number_tokens, \
+    offlen, so_output = struct.unpack("<IIIII", args[:20])
+  return [ "3D_CREATE_SHADER", handle, shader_type, number_tokens, offlen, so_output]
+
+def create_surface(cmd, args):
+  handle, resource_handle, format, \
+    val0, val1 = struct.unpack("<IIIII", args)
+  return [ "3D_CREATE_SURFACE", handle, resource_handle, format, val0, val1]
+
+def create_object(cmd, args):
+  type = virgl.VIRGL_OBJ(cmd["opt"])
+
+  if type == virgl.VIRGL_OBJ.BLEND:
+    return create_blend(cmd, args)
+  elif type == virgl.VIRGL_OBJ.RASTERIZER:
+    return create_rasterizer(cmd, args)
+  elif type == virgl.VIRGL_OBJ.DSA:
+    return create_dsa(cmd, args)
+  elif type == virgl.VIRGL_OBJ.SHADER:
+    return create_shader(cmd, args)
+  elif type == virgl.VIRGL_OBJ.VERTEX_ELEMENTS:
+    return create_vertex_elements(cmd, args)
+  elif type == virgl.VIRGL_OBJ.SAMPLER_VIEW:
+    return create_sampler_view(cmd, args)
+  elif type == virgl.VIRGL_OBJ.SAMPLER_STATE:
+    return create_sampler_state(cmd, args)
+  elif type == virgl.VIRGL_OBJ.SURFACE:
+    return create_surface(cmd, args)
+  elif type == virgl.VIRGL_OBJ.QUERY:
+    return create_query(cmd, args)
+  elif type == virgl.VIRGL_OBJ.STREAMOUT_TARGET:
+    return create_streamout_target(cmd, args)
+
+  if not quiet:
+    print("[!] UNKNOWN 3D OBJECT TYPE: %d" % type)
+  return None
+
+def bind_object(cmd, args):
+  handle, = struct.unpack("<I", args)
+  type = cmd["opt"]
+  return [ virgl.CMD_3D(cmd["cmd"]).name, type, handle]
+
+def bind_shader(cmd, args):
+  handle, type  = struct.unpack("<II", args)
+  return [ virgl.CMD_3D(cmd["cmd"]).name, handle, type]
+
 def evaluate_command(cmd, args):
     head = cmd["cmd"]
 

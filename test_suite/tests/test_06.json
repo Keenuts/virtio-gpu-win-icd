@@ -37,6 +37,22 @@
     ["RESOURCE_CREATE_3D", "*7", 0, 64, 16, 524288, 1, 1, 1, 0, 0, 0],
     ["CTX_ATTACH_RESOURCE", "*1", "*7"],
 
+    [ "SUBMIT_3D", "SET_SUB_CTX", 0,
+      "3D_CREATE_SURFACE", 2, 5, 1, 0, 0,
+      "3D_CREATE_DSA", 3, 0, 0, 0, 0,
+      "BIND_OBJECT", 3, 3,
+      "3D_CREATE_SHADER", 4, 1, 110, 13, 0,
+      "BIND_SHADER", 4, 1,
+      "3D_CREATE_SHADER",  5, 0, 603, 62, 0,
+      "BIND_SHADER", 5, 0,
+      "3D_CREATE_RASTERIZER", 6, 536887490, 1065353216, 0, 65535, 1065353216, 0, 0, 0,
+      "BIND_OBJECT", 2, 6,
+      "3D_CREATE_BLEND", 7, 4, 0, 2013265920, 0, 0, 0, 0, 0, 0, 0,
+      "BIND_OBJECT", 1, 7
+    ],
+
+    ["SUBMIT_3D", "DESTROY_SUB_CTX", 1, "SET_SUB_CTX", 0],
+
     ["CTX_DESTROY", "*1"]
 	]
 }

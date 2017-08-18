@@ -70,6 +70,20 @@ class CMD_3D(Enum):
   DESTROY_SUB_CTX = 30
   BIND_SHADER = 31
 
+class VIRGL_OBJ(Enum):
+  NULL = 0
+  BLEND = 1
+  RASTERIZER = 2
+  DSA = 3
+  SHADER = 4
+  VERTEX_ELEMENTS = 5
+  SAMPLER_VIEW = 6
+  SAMPLER_STATE = 7
+  SURFACE = 8
+  QUERY = 9
+  STREAMOUT_TARGET = 10
+  MAX_OBJECTS = 11
+
 class GPU_CTRL_HDR(Structure):
   _fields_ = [("type", c_ulong),
               ("flags", c_ulong),

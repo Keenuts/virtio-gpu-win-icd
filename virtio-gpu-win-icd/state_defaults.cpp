@@ -316,4 +316,20 @@ namespace State
         TRACE_OUT();
         return STATUS_SUCCESS;
     }
+
+    INT loadDefaultPolygonStipple(VirGL::VirglCommandBuffer& cmd)
+    {
+        TRACE_IN();
+
+        std::vector<UINT32> params(32);
+        UINT32 i = 0;
+
+        for (i = 0; i < 32; i++)
+            params[i] = 0xffffffff;
+
+        cmd.setPolygonStipple(params);
+
+        TRACE_OUT();
+        return STATUS_SUCCESS;
+    }
 }

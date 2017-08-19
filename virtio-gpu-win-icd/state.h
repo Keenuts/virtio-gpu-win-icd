@@ -76,6 +76,7 @@ namespace State
     INT loadDefaultVertexShader(VirGL::VirglCommandBuffer& cmd);
     INT loadDefaultRasterizer(VirGL::VirglCommandBuffer& cmd);
     INT loadDefaultBlend(VirGL::VirglCommandBuffer& cmd);
+    INT loadDefaultPolygonStipple(VirGL::VirglCommandBuffer& cmd);
 
     CONST CHAR* errorToStr(INT error);
 }

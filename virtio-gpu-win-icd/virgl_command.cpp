@@ -143,9 +143,28 @@ namespace VirGL
 
         head = createHeader(VIRGL_CCMD_SET_VIEWPORT_STATE, 0, length);
 
-
         memcpy(params.data(), scale, sizeof(FLOAT) * 3);
         memcpy(params.data() + (sizeof(FLOAT) * 3), translation, sizeof(FLOAT) * 3);
+
+        m_commands.push_back(std::pair<GPU_3D_CMD, std::vector<UINT32>>(head, params));
+        m_total_size += sizeof(head) + sizeof(UINT32) * LENGTH_FROM_HEADER(head);
+
+        TRACE_OUT();
+    }
+
+    VOID VirglCommandBuffer::setPolygonStipple(std::vector<UINT32>& stipple)
+    {
+        TRACE_IN();
+
+        assert(stipple.size() == 32);
+
+        GPU_3D_CMD head = { 0 };
+        const UINT32 length = 32;
+        std::vector<UINT32> params(length);
+
+        head = createHeader(VIRGL_CCMD_SET_POLYGON_STIPPLE, 0, length);
+
+        memcpy(params.data(), stipple.data(), sizeof(UINT32) * 32);
 
         m_commands.push_back(std::pair<GPU_3D_CMD, std::vector<UINT32>>(head, params));
         m_total_size += sizeof(head) + sizeof(UINT32) * LENGTH_FROM_HEADER(head);

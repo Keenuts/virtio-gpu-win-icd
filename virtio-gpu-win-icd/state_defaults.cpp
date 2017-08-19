@@ -350,4 +350,38 @@ namespace State
         TRACE_OUT();
         return STATUS_SUCCESS;
     }
+
+    INT setDefaultViewportState(VirGL::VirglCommandBuffer& cmd)
+    {
+        TRACE_IN();
+
+        std::vector<float> params(6);
+        UINT32 i = 0;
+
+        params[0] = 400.0f;
+        params[1] = -300.0f;
+        params[2] = 0.5f;
+        params[3] = 400.0f;
+        params[4] = 300.0f;
+        params[5] = 0.5f;
+
+        cmd.setViewportState(0, params);
+
+        params.resize(6 * 15);
+        for (i = 0; i < 16; i++) {
+            params[i * 6 + 0] = 400.0f;
+            params[i * 6 + 1] = -300.0f;
+            params[i * 6 + 2] = 0.5f;
+            params[i * 6 + 3] = 400.0f;
+            params[i * 6 + 4] = 300.0f;
+            params[i * 6 + 5] = 0.5f;
+        }
+
+        cmd.setViewportState(1, params);
+
+        //For some reasons, Mesa intializes the 16 scissors using two commands (1 + 15).
+
+        TRACE_OUT();
+        return STATUS_SUCCESS;
+    }
 }

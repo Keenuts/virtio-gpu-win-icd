@@ -80,6 +80,7 @@ namespace State
     INT setDefaultPolygonStipple(VirGL::VirglCommandBuffer& cmd);
     INT setDefaultScissorState(VirGL::VirglCommandBuffer& cmd);
     INT setDefaultViewportState(VirGL::VirglCommandBuffer& cmd);
+    INT setDefaultFramebuffer(VirGL::VirglCommandBuffer& cmd);
 
     CONST CHAR* errorToStr(INT error);
 }

@@ -384,4 +384,16 @@ namespace State
         TRACE_OUT();
         return STATUS_SUCCESS;
     }
+
+    INT setDefaultFramebuffer(VirGL::VirglCommandBuffer& cmd)
+    {
+        TRACE_IN();
+
+        std::vector<UINT32> handles(1);
+        handles[0] = 2;
+
+        cmd.setFramebufferState(1, 0, handles);
+        TRACE_OUT();
+        return STATUS_SUCCESS;
+    }
 }

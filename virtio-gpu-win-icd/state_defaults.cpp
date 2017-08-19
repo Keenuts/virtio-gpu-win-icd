@@ -317,7 +317,7 @@ namespace State
         return STATUS_SUCCESS;
     }
 
-    INT loadDefaultPolygonStipple(VirGL::VirglCommandBuffer& cmd)
+    INT setDefaultPolygonStipple(VirGL::VirglCommandBuffer& cmd)
     {
         TRACE_IN();
 
@@ -328,6 +328,24 @@ namespace State
             params[i] = 0xffffffff;
 
         cmd.setPolygonStipple(params);
+
+        TRACE_OUT();
+        return STATUS_SUCCESS;
+    }
+
+    INT setDefaultScissorState(VirGL::VirglCommandBuffer& cmd)
+    {
+        TRACE_IN();
+
+        std::vector<UINT32> params(32);
+        UINT32 i = 0;
+
+        for (i = 0; i < 16; i++) {
+            params[i * 2] = 0;
+            params[i * 2 + 1] = 800 | (600 << 16);
+        }
+
+        cmd.setScissorState(0, params);
 
         TRACE_OUT();
         return STATUS_SUCCESS;

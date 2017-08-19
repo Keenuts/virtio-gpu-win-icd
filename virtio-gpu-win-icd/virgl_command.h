@@ -73,7 +73,6 @@ namespace VirGL
         VOID setCurrentSubContext(UINT32 sub_ctx);
         VOID deleteSubContext(UINT32 sub_ctx);
 
-        /* UNTESTED */
         VOID clear(FLOAT rgba[4], double depth, UINT32 stencil);
         VOID setViewportState(FLOAT scale[3], FLOAT translation[3]);
 
@@ -81,6 +80,8 @@ namespace VirGL
         VOID bindObject(UINT32 handle, UINT32 type);
         VOID bindShader(UINT32 handle, UINT32 type);
         VOID setViewportState(UINT32 start_slot, std::vector<FLOAT>& values);
+        //extremums: min first, then max, two by two
+        VOID setScissorState(UINT32 start_slot, std::vector<UINT32>& extremums);
         VOID setPolygonStipple(std::vector<UINT32>& stipple);
         VOID setFramebufferState(UINT32 nb_cbuf, UINT32 zsurf_handle, std::vector<UINT32>& surf_handles);
         VOID setConstantBuffer(UINT32 shader_type, UINT32 index, std::vector<float> constants);

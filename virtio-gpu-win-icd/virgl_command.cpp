@@ -152,6 +152,27 @@ namespace VirGL
         TRACE_OUT();
     }
 
+    VOID VirglCommandBuffer::setScissorState(UINT32 start_slot, std::vector<UINT32>& extremums)
+    {
+        TRACE_IN();
+
+        assert(extremums.size() % 2 == 0);
+        if (extremums.size() == 0)
+            return;
+
+        GPU_3D_CMD head = { 0 };
+        const UINT32 length = (UINT32)extremums.size() + 1;
+        std::vector<UINT32> params(length);
+
+        head = createHeader(VIRGL_CCMD_SET_SCISSOR_STATE, 0, length);
+
+        params[0] = start_slot;
+        for (UINT32 i = 0; i < (UINT32)extremums.size(); i++)
+            params[i + 1] = extremums[i];
+
+        TRACE_OUT();
+    }
+
     VOID VirglCommandBuffer::setPolygonStipple(std::vector<UINT32>& stipple)
     {
         TRACE_IN();

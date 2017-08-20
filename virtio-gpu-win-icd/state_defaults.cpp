@@ -317,6 +317,26 @@ namespace State
         return STATUS_SUCCESS;
     }
 
+    /*
+    INT loadDefaultVertexElement(VirGL::VirglCommandBuffer& cmd)
+    {
+        TRACE_IN();
+
+        //These values come from an OpenGL app ran on Fedora (for now)
+        std::vector<UINT32> args(1);
+        args[0] = 0;
+        args[1] = 1;
+        args[2] = 0;
+        args[3] = 0x3f;
+
+        cmd.setFramebufferState(1, 0, args);
+        cmd.createObject(DEFAULT_VERTEX_ELEMENTS_HANDLE, VIRGL_OBJECT_VERTEX_ELEMENTS, args);
+        cmd.bindObject(DEFAULT_VERTEX_ELEMENTS_HANDLE, VIRGL_OBJECT_VERTEX_ELEMENTS);
+        TRACE_OUT();
+        return STATUS_SUCCESS;
+    }
+    */
+
     INT setDefaultPolygonStipple(VirGL::VirglCommandBuffer& cmd)
     {
         TRACE_IN();
@@ -396,4 +416,30 @@ namespace State
         TRACE_OUT();
         return STATUS_SUCCESS;
     }
+
+    /*
+    INT setDefaultConstantBuffers(VirGL::VirglCommandBuffer& cmd)
+    {
+        TRACE_IN();
+
+        //These values come from an OpenGL app ran on Fedora
+        std::vector<float> payload(4);
+
+        payload[0] = 0.001953f;
+        payload[1] = -1.0f;
+        payload[2] = 0.002604f;
+        payload[3] = -1.0f;
+
+        cmd.setConstantBuffer(VIRGL_SHADER_TYPE_VERTEX, 0, payload);
+
+        payload[0] = 0.0f;
+        payload[1] = 0.0f;
+        payload[2] = 0.0f;
+        payload[3] = 1.0f;
+        cmd.setConstantBuffer(VIRGL_SHADER_TYPE_FRAGMENT, 0, payload);
+
+        TRACE_OUT();
+        return STATUS_SUCCESS;
+    }
+    */
 }

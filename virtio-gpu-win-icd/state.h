@@ -76,11 +76,13 @@ namespace State
     INT loadDefaultVertexShader(VirGL::VirglCommandBuffer& cmd);
     INT loadDefaultRasterizer(VirGL::VirglCommandBuffer& cmd);
     INT loadDefaultBlend(VirGL::VirglCommandBuffer& cmd);
+    // INT loadDefaultVertexElement(VirGL::VirglCommandBuffer& cmd);
 
     INT setDefaultPolygonStipple(VirGL::VirglCommandBuffer& cmd);
     INT setDefaultScissorState(VirGL::VirglCommandBuffer& cmd);
     INT setDefaultViewportState(VirGL::VirglCommandBuffer& cmd);
     INT setDefaultFramebuffer(VirGL::VirglCommandBuffer& cmd);
+    // INT setDefaultConstantBuffers(VirGL::VirglCommandBuffer& cmd);
 
     CONST CHAR* errorToStr(INT error);
 }

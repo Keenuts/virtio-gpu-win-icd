@@ -1,11 +1,5 @@
 LIBRARY opengl32.dll
 EXPORTS
-	wglCreateContext @346
-	wglMakeCurrent  @357
-	wglDeleteContext @348
-	wglChoosePixelFormat @344
-	wglDescribePixelFormat @350
-	wglSetPixelFormat @360
 	glBegin @11
 
 	glClear @17
@@ -14,10 +8,27 @@ EXPORTS
 	glClearStencil @22
 
 	glColor3f @28
+	glDrawArrays @73
+	glEnable @80
 	glEnd @82
 	glFlush @98
 	glVertex2i @322
 	glViewport @343
+
+	wglCreateContext @346
+	wglMakeCurrent  @357
+	wglDeleteContext @348
+	wglChoosePixelFormat @344
+	wglDescribePixelFormat @350
+	wglSetPixelFormat @360
+
+	glBindAttribLocation @370
+	glGenBuffers @371
+	glBindBuffer @372
+	glBufferData @373
+	glBufferSubData @374
+	glVertexAttribPointer @375
+	glEnableVertexAttribArray @376
 
     finish_tests @998
 	initialize_test_mode @999

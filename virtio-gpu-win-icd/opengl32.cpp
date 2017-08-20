@@ -89,6 +89,26 @@ void WINAPI glVertex2i( GLint x, GLint y )
     TRACE_OUT();
 }
 
+void WINAPI glDrawArrays(GLenum mode, GLint first, GLsizei count)
+{
+    TRACE_IN();
+
+    UNREFERENCED_PARAMETER(mode);
+    UNREFERENCED_PARAMETER(first);
+    UNREFERENCED_PARAMETER(count);
+
+    TRACE_OUT();
+}
+
+void WINAPI glEnable(GLenum cap)
+{
+    TRACE_IN();
+
+    UNREFERENCED_PARAMETER(cap);
+
+    TRACE_OUT();
+}
+
 void WINAPI glEnd(void)
 {
     TRACE_IN();
@@ -208,4 +228,82 @@ BOOL WINAPI wglSetPixelFormat(HDC hdc, int iPixelFormat, const PIXELFORMATDESCRI
 
     TRACE_OUT();
 	return TRUE;
+}
+
+void WINAPI glBindAttribLocation(GLuint program, GLuint index, const GLchar *name)
+{
+    TRACE_IN();
+
+    UNREFERENCED_PARAMETER(program);
+    UNREFERENCED_PARAMETER(index);
+    UNREFERENCED_PARAMETER(name);
+
+    TRACE_OUT();
+}
+
+void WINAPI glGenBuffers(GLsizei n, GLuint *buffers)
+{
+    TRACE_IN();
+
+    UNREFERENCED_PARAMETER(n);
+    UNREFERENCED_PARAMETER(buffers);
+
+    TRACE_OUT();
+}
+
+void WINAPI glBindBuffer(GLenum target, GLuint buffer)
+{
+    TRACE_IN();
+
+    UNREFERENCED_PARAMETER(target);
+    UNREFERENCED_PARAMETER(buffer);
+
+    TRACE_OUT();
+}
+
+void WINAPI glBufferData(GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage)
+{
+    TRACE_IN();
+
+    UNREFERENCED_PARAMETER(target);
+    UNREFERENCED_PARAMETER(size);
+    UNREFERENCED_PARAMETER(data);
+    UNREFERENCED_PARAMETER(usage);
+
+    TRACE_OUT();
+}
+
+void WINAPI glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid * data)
+{
+    TRACE_IN();
+
+    UNREFERENCED_PARAMETER(target);
+    UNREFERENCED_PARAMETER(offset);
+    UNREFERENCED_PARAMETER(size);
+    UNREFERENCED_PARAMETER(data);
+
+    TRACE_OUT();
+}
+
+void WINAPI glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid * pointer)
+{
+    TRACE_IN();
+
+    UNREFERENCED_PARAMETER(index);
+    UNREFERENCED_PARAMETER(size);
+    UNREFERENCED_PARAMETER(type);
+    UNREFERENCED_PARAMETER(normalized);
+    UNREFERENCED_PARAMETER(stride);
+    UNREFERENCED_PARAMETER(pointer);
+
+    TRACE_OUT();
+}
+
+void WINAPI glEnableVertexAttribArray(GLuint index)
+{
+    TRACE_IN();
+
+    UNREFERENCED_PARAMETER(index);
+
+    TRACE_OUT();
 }

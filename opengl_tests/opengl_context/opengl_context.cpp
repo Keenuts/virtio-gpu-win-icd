@@ -3,30 +3,126 @@
 
 #include "stdafx.h"
 #include "opengl_context.h"
+#include "GLExtensions.h"
+
 #include <windows.h>			/* must include this before GL/gl.h */
 #include <GL/gl.h>			/* OpenGL header file */
 #include <GL/glu.h>			/* OpenGL utilities header file */
 #include <stdio.h>
 #include <assert.h>
 
+static const GLfloat vertices[] = {
+		// front
+		-1.0f, -1.0f, +1.0f,
+		+1.0f, -1.0f, +1.0f,
+		-1.0f, +1.0f, +1.0f,
+		+1.0f, +1.0f, +1.0f,
+		// back
+		+1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		+1.0f, +1.0f, -1.0f,
+		-1.0f, +1.0f, -1.0f,
+		// right
+		+1.0f, -1.0f, +1.0f,
+		+1.0f, -1.0f, -1.0f,
+		+1.0f, +1.0f, +1.0f,
+		+1.0f, +1.0f, -1.0f,
+		// left
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f, +1.0f,
+		-1.0f, +1.0f, -1.0f,
+		-1.0f, +1.0f, +1.0f,
+		// top
+		-1.0f, +1.0f, +1.0f,
+		+1.0f, +1.0f, +1.0f,
+		-1.0f, +1.0f, -1.0f,
+		+1.0f, +1.0f, -1.0f,
+		// bottom
+		-1.0f, -1.0f, -1.0f,
+		+1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f, +1.0f,
+		+1.0f, -1.0f, +1.0f,
+};
+
+static const GLfloat colors[] = {
+		// front
+		0.0f,  0.0f,  1.0f, // blue
+		1.0f,  0.0f,  1.0f, // magenta
+		0.0f,  1.0f,  1.0f, // cyan
+		1.0f,  1.0f,  1.0f, // white
+		// back
+		1.0f,  0.0f,  0.0f, // red
+		0.0f,  0.0f,  0.0f, // black
+		1.0f,  1.0f,  0.0f, // yellow
+		0.0f,  1.0f,  0.0f, // green
+		// right
+		1.0f,  0.0f,  1.0f, // magenta
+		1.0f,  0.0f,  0.0f, // red
+		1.0f,  1.0f,  1.0f, // white
+		1.0f,  1.0f,  0.0f, // yellow
+		// left
+		0.0f,  0.0f,  0.0f, // black
+		0.0f,  0.0f,  1.0f, // blue
+		0.0f,  1.0f,  0.0f, // green
+		0.0f,  1.0f,  1.0f, // cyan
+		// top
+		0.0f,  1.0f,  1.0f, // cyan
+		1.0f,  1.0f,  1.0f, // white
+		0.0f,  1.0f,  0.0f, // green
+		1.0f,  1.0f,  0.0f, // yellow
+		// bottom
+		0.0f,  0.0f,  0.0f, // black
+		1.0f,  0.0f,  0.0f, // red
+		0.0f,  0.0f,  1.0f, // blue
+		1.0f,  0.0f,  1.0f  // magenta
+};
+
+static const GLfloat normals[] = {
+		// front
+		+0.0f, +0.0f, +1.0f, // forward
+		+0.0f, +0.0f, +1.0f, // forward
+		+0.0f, +0.0f, +1.0f, // forward
+		+0.0f, +0.0f, +1.0f, // forward
+		// back
+		+0.0f, +0.0f, -1.0f, // backward
+		+0.0f, +0.0f, -1.0f, // backward
+		+0.0f, +0.0f, -1.0f, // backward
+		+0.0f, +0.0f, -1.0f, // backward
+		// right
+		+1.0f, +0.0f, +0.0f, // right
+		+1.0f, +0.0f, +0.0f, // right
+		+1.0f, +0.0f, +0.0f, // right
+		+1.0f, +0.0f, +0.0f, // right
+		// left
+		-1.0f, +0.0f, +0.0f, // left
+		-1.0f, +0.0f, +0.0f, // left
+		-1.0f, +0.0f, +0.0f, // left
+		-1.0f, +0.0f, +0.0f, // left
+		// top
+		+0.0f, +1.0f, +0.0f, // up
+		+0.0f, +1.0f, +0.0f, // up
+		+0.0f, +1.0f, +0.0f, // up
+		+0.0f, +1.0f, +0.0f, // up
+		// bottom
+		+0.0f, -1.0f, +0.0f, // down
+		+0.0f, -1.0f, +0.0f, // down
+		+0.0f, -1.0f, +0.0f, // down
+		+0.0f, -1.0f, +0.0f  // down
+};
+
 void
 display()
 {
 	/* rotate a triangle around */
+    glClearColor(0.5, 0.5, 0.5, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	glBegin(GL_TRIANGLES);
-
-	glColor3f(1.0f, 0.0f, 0.0f);
-	glVertex2i(0, 1);
-	glColor3f(0.0f, 1.0f, 0.0f);
-	glVertex2i(-1, -1);
-	glColor3f(0.0f, 0.0f, 1.0f);
-	glVertex2i(1, -1);
-
-	glEnd();
-
-	glFlush();
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
+    glDrawArrays(GL_TRIANGLE_STRIP, 8, 4);
+    glDrawArrays(GL_TRIANGLE_STRIP, 12, 4);
+    glDrawArrays(GL_TRIANGLE_STRIP, 16, 4);
+    glDrawArrays(GL_TRIANGLE_STRIP, 20, 4);
 
     Sleep(1000);
     exit(0);
@@ -160,6 +256,27 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	hRC = wglCreateContext(hDC);
 	wglMakeCurrent(hDC, hRC);
+    glEnable(GL_CULL_FACE);
+
+    GLuint vbo_handle;
+
+    const GLsizeiptr position_offset = 0;
+    const GLsizeiptr color_offset = sizeof(vertices);
+    const GLsizeiptr normals_offset = color_offset + sizeof(colors);
+
+    glGenBuffers(1, &vbo_handle);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_handle);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices) + sizeof(colors) + sizeof(normals), 0, GL_STATIC_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, position_offset, sizeof(vertices), &vertices[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, color_offset, sizeof(colors), &colors[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, normals_offset, sizeof(normals), &normals[0]);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid*)(intptr_t)position_offset);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid*)(intptr_t)color_offset);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid*)(intptr_t)normals_offset);
+    glEnableVertexAttribArray(2);
 
 	ShowWindow(hWnd, nCmdShow);
 

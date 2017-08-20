@@ -173,6 +173,7 @@ copy $(OutputPath)\opengl32.dll $(USERPROFILE)\Desktop\VM\</Command>
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GLExtensions.h" />
     <ClInclude Include="opengl_context.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />

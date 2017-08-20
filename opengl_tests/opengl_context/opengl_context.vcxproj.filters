@@ -30,6 +30,9 @@
     <ClInclude Include="opengl_context.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GLExtensions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

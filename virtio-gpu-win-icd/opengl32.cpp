@@ -245,8 +245,8 @@ void WINAPI glGenBuffers(GLsizei n, GLuint *buffers)
 {
     TRACE_IN();
 
-    UNREFERENCED_PARAMETER(n);
-    UNREFERENCED_PARAMETER(buffers);
+    UINT32 res = State::GenBuffers(n, buffers);
+    assert(res == STATUS_SUCCESS);
 
     TRACE_OUT();
 }
@@ -255,8 +255,8 @@ void WINAPI glBindBuffer(GLenum target, GLuint buffer)
 {
     TRACE_IN();
 
-    UNREFERENCED_PARAMETER(target);
-    UNREFERENCED_PARAMETER(buffer);
+    UINT32 res = State::BindBuffer(target, buffer);
+    assert(res == STATUS_SUCCESS);
 
     TRACE_OUT();
 }
@@ -265,10 +265,8 @@ void WINAPI glBufferData(GLenum target, GLsizeiptr size, const GLvoid *data, GLe
 {
     TRACE_IN();
 
-    UNREFERENCED_PARAMETER(target);
-    UNREFERENCED_PARAMETER(size);
-    UNREFERENCED_PARAMETER(data);
-    UNREFERENCED_PARAMETER(usage);
+    UINT32 res = State::BufferData(target, (UINT32)size, data, usage);
+    assert(res == STATUS_SUCCESS);
 
     TRACE_OUT();
 }
@@ -277,10 +275,8 @@ void WINAPI glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, con
 {
     TRACE_IN();
 
-    UNREFERENCED_PARAMETER(target);
-    UNREFERENCED_PARAMETER(offset);
-    UNREFERENCED_PARAMETER(size);
-    UNREFERENCED_PARAMETER(data);
+    UINT32 res = State::BufferSubData(target, (UINT32)offset, (UINT32)size, data);
+    assert(res == STATUS_SUCCESS);
 
     TRACE_OUT();
 }
@@ -289,12 +285,8 @@ void WINAPI glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboole
 {
     TRACE_IN();
 
-    UNREFERENCED_PARAMETER(index);
-    UNREFERENCED_PARAMETER(size);
-    UNREFERENCED_PARAMETER(type);
-    UNREFERENCED_PARAMETER(normalized);
-    UNREFERENCED_PARAMETER(stride);
-    UNREFERENCED_PARAMETER(pointer);
+    UINT32 res = State::VertexAttribPointer(index, size, type, normalized, stride, pointer);
+    assert(res == STATUS_SUCCESS);
 
     TRACE_OUT();
 }
@@ -303,7 +295,8 @@ void WINAPI glEnableVertexAttribArray(GLuint index)
 {
     TRACE_IN();
 
-    UNREFERENCED_PARAMETER(index);
+    UINT32 res = State::EnableVertexAttribArray(index);
+    assert(res == STATUS_SUCCESS);
 
     TRACE_OUT();
 }

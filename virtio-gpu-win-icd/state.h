@@ -12,12 +12,30 @@
 #define DEFAULT_FRAMEBUFFER_HANDLE 0
 #define DEFAULT_FRAG_HANDLE 4
 #define DEFAULT_VERT_HANDLE 5
+#define DEFAULT_VERTEX_BUFFER_HANDLE 5
 #define DEFAULT_RASTERIZER_HANDLE 6
 #define DEFAULT_BLEND_HANDLE 7
 #define DEFAULT_VERTEX_ELEMENTS_HANDLE 8
 
 namespace State
 {
+    typedef struct _VBO_ENTRY {
+        BOOL valid;
+
+        UINT32 res_handle;
+        UINT32 size;
+        BOOL enabled;
+        BOOL created;
+    } VBO_ENTRY, *PVBO_ENTRY;
+
+    typedef struct _VBO_DESCRIPTOR {
+        BOOL valid;
+
+        BOOL enabled;
+        UINT32 stride;
+        UINT32 offset;
+        UINT32 res_handle;
+    } VBO_DESCRIPTOR, *PVBO_DESCRIPTOR;
 
     struct OpenGLState
     {
@@ -32,6 +50,9 @@ namespace State
         VirGL::RESOURCE_CREATION *rasterizer_info;
         VirGL::RESOURCE_CREATION *blend_info;
         VirGL::RESOURCE_CREATION *vertex_elements_info;
+
+        std::vector<VBO_ENTRY> *vbos;
+        std::vector<VBO_DESCRIPTOR> *vbo_descriptors;
 
         VirGL::VirglCommandBuffer *command_buffer;
 
@@ -57,6 +78,13 @@ namespace State
     INT end(VOID);
 
     INT flush(VOID);
+
+    INT GenBuffers(UINT32 n, UINT32 *buffers);
+    INT BindBuffer(UINT32 target, UINT32 buffer);
+    INT BufferData(UINT32 target, UINT32 size, CONST VOID *data, UINT32 usage);
+    INT BufferSubData(UINT32 target, UINT32 offset, UINT32 size, CONST VOID *data);
+    INT VertexAttribPointer(UINT32 index, UINT32 size, UINT32 type, BOOLEAN normalized, UINT32 stride, CONST VOID *pointer);
+    INT EnableVertexAttribArray(UINT32 index);
 
     INT createDefaultFragmentShader(VOID);
     INT createDefaultVertexShader(VOID);

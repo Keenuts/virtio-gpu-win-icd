@@ -1,5 +1,6 @@
 #include "debug.h"
 #include "driver_api.h"
+#include "GLtypes.h"
 #include "state.h"
 #include "tmp_const.h"
 #include "uniform_buffer.h"
@@ -55,6 +56,9 @@ namespace State
 
         restricted = FALSE;
         command_buffer = new VirGL::VirglCommandBuffer(current_vgl_ctx);
+
+        vbos = new std::vector<VBO_ENTRY>();
+        vbo_descriptors = new std::vector<VBO_DESCRIPTOR>();
     }
 
     OpenGLState::~OpenGLState()
@@ -312,6 +316,160 @@ namespace State
 
         res = cmd->submitCommandBuffer();
         assert(res == STATUS_SUCCESS);
+        return STATUS_SUCCESS;
+    }
+
+    INT GenBuffers(UINT32 n, UINT32 *buffers)
+    {
+        assert(buffers);
+
+        std::vector<VBO_ENTRY> *vbos = states[current_sub_ctx]->vbos;
+
+        for (UINT32 i = 0; i < n; i++) {
+            UINT32 handle = (UINT32)vbos->size();
+            vbos->resize(handle + 1);
+
+            VBO_ENTRY entry = { 0 };
+            entry.valid = TRUE;
+
+            entry.res_handle = DEFAULT_VERTEX_BUFFER_HANDLE;
+            entry.size = 0;
+            entry.enabled = FALSE;
+            entry.created = FALSE;
+
+            vbos->data()[handle] = entry;
+            buffers[i] = handle;
+        }
+
+        return STATUS_SUCCESS;
+    }
+
+    INT BindBuffer(UINT32 target, UINT32 buffer)
+    {
+        std::vector<VBO_ENTRY> *vbos = states[current_sub_ctx]->vbos;
+        if (buffer > vbos->size() || !(*vbos)[buffer].valid)
+            return STATUS_INVALID_HANDLE;
+
+        for (UINT32 i = 0; i < vbos->size(); i++)
+            (*vbos)[i].enabled = FALSE;
+        (*vbos)[buffer].enabled = TRUE;
+
+        UNREFERENCED_PARAMETER(target);
+        return STATUS_SUCCESS;
+    }
+
+    static INT retreiveCurrentVBO(UINT32 *handle)
+    {
+
+        std::vector<VBO_ENTRY> *vbos = states[current_sub_ctx]->vbos;
+        UINT32 current = (UINT32)-1;
+        UINT32 i;
+
+        assert(handle);
+
+        for (i = 0; i < vbos->size(); i++) {
+            if ((*vbos)[i].enabled) {
+                current = i;
+                break;
+            }
+        }
+
+        if (current >= vbos->size() || !(*vbos)[current].valid)
+            return STATUS_INVALID_HANDLE;
+        *handle = current;
+        return STATUS_SUCCESS;
+    }
+
+    INT BufferData(UINT32 target, UINT32 size, CONST VOID *data, UINT32 usage)
+    {
+        std::vector<VBO_ENTRY> *vbos = states[current_sub_ctx]->vbos;
+        UINT current;
+        UINT32 res = retreiveCurrentVBO(&current);
+        if (res != STATUS_SUCCESS)
+            return res;
+
+        (*vbos)[current].size = size;
+
+        UNREFERENCED_PARAMETER(data);
+        UNREFERENCED_PARAMETER(usage);
+        UNREFERENCED_PARAMETER(target);
+
+        return STATUS_SUCCESS;
+    }
+
+    INT BufferSubData(UINT32 target, UINT32 offset, UINT32 size, CONST VOID *data)
+    {
+        std::vector<VBO_ENTRY> *vbos = states[current_sub_ctx]->vbos;
+        VirGL::VirglCommandBuffer *cmd = states[current_sub_ctx]->command_buffer;
+        VirGL::INLINE_WRITE info = { 0 };
+        UINT current;
+        UINT32 res = retreiveCurrentVBO(&current);
+        if (res != STATUS_SUCCESS)
+            return res;
+
+        info.handle = (*vbos)[current].res_handle;
+        info.data = (VOID*)data;
+        info.data_len = size;
+        info.x = offset;
+        info.width = size;
+        info.height = 1;
+        info.depth = 1;
+        info.usage = size;
+
+        cmd->setCurrentSubContext(0);
+        cmd->inlineWrite(info);
+        cmd->submitCommandBuffer();
+
+        UNREFERENCED_PARAMETER(data);
+        UNREFERENCED_PARAMETER(target);
+
+        return STATUS_SUCCESS;
+    }
+
+    static UINT32 sizeFromType(UINT32 type)
+    {
+        if (type == GL_FLOAT)
+            return sizeof(FLOAT);
+        else if (type == GL_INT)
+            return sizeof(INT);
+        else if (type == GL_UNSIGNED_INT)
+            return sizeof(INT);
+        else if (type == GL_BYTE)
+            return sizeof(BYTE);
+        else
+            assert(0 && "Unknown type");
+        return 1;
+    }
+
+    INT VertexAttribPointer(UINT32 index, UINT32 size, UINT32 type, BOOLEAN normalized, UINT32 stride, CONST VOID *pointer)
+    {
+        std::vector<VBO_DESCRIPTOR> *descriptors = states[current_sub_ctx]->vbo_descriptors;
+        VBO_DESCRIPTOR descriptor = { 0 };
+        UINT current;
+        UINT32 res = retreiveCurrentVBO(&current);
+        if (res != STATUS_SUCCESS)
+            return res;
+
+        descriptor.valid = TRUE;
+        descriptor.offset = (UINT32)(UINT64)pointer;
+        descriptor.res_handle = states[current_sub_ctx]->vbos->data()[current].res_handle;
+        descriptor.stride = size * sizeFromType(type);
+
+        if ((UINT32)descriptors->size() < index + 1)
+            descriptors->resize(index + 1);
+        descriptors->data()[index] = descriptor;
+
+        UNREFERENCED_PARAMETER(stride);
+        UNREFERENCED_PARAMETER(normalized);
+        return STATUS_SUCCESS;
+    }
+
+    INT EnableVertexAttribArray(UINT32 index)
+    {
+        std::vector<VBO_DESCRIPTOR> *descriptors = states[current_sub_ctx]->vbo_descriptors;
+        if ((UINT32)descriptors->size() < index + 1 || !(*descriptors)[index].valid)
+            return STATUS_INVALID_HANDLE;
+        (*descriptors)[index].enabled = TRUE;
         return STATUS_SUCCESS;
     }
 }

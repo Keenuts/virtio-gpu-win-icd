@@ -23,10 +23,13 @@ namespace VirGL
         : m_ctx_id(vgl_ctx), m_total_size(0), m_commands()
     { }
 
-    INT VirglCommandBuffer::submitCommandBuffer()
+    INT VirglCommandBuffer::submitCommandBuffer(VOID)
     {
         TRACE_IN();
         DbgPrint(TRACE_LEVEL_INFO, ("[?] submit cmd buffer\n"));
+
+        if (m_total_size == 0)
+            return STATUS_SUCCESS;
 
         BYTE *buffer = new BYTE[m_total_size + sizeof(GPU_SUBMIT_3D)];
         if (!buffer)
@@ -55,9 +58,22 @@ namespace VirGL
 
         delete[] buffer;
 
+        m_commands.clear();
+        m_total_size = 0;
+
         TRACE_OUT();
         return STATUS_SUCCESS;
     };
+
+    VOID VirglCommandBuffer::emptyCommandBuffer(VOID)
+    {
+        TRACE_IN();
+
+        m_commands.clear();
+        m_total_size = 0;
+
+        TRACE_OUT();
+    }
 
     VOID VirglCommandBuffer::createSubContext(UINT32 sub_ctx)
     {

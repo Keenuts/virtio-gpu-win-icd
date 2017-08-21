@@ -67,7 +67,8 @@ namespace VirGL
 
         VirglCommandBuffer(UINT32 vgl_ctx);
 
-        INT submitCommandBuffer();
+        INT submitCommandBuffer(VOID);
+        VOID emptyCommandBuffer(VOID);
 
         VOID createSubContext(UINT32 sub_ctx);
         VOID setCurrentSubContext(UINT32 sub_ctx);

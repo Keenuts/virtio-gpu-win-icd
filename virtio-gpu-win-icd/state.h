@@ -27,21 +27,13 @@ namespace State
         double clear_depth;
         UINT32 clear_stencil;
 
-        UINT32 framebuffer_id;
-        UINT32 frag_shader_id;
-        UINT32 vert_shader_id;
-        UINT32 rasterizer_id;
-        UINT32 blend_id;
-
-        UniformBuffer<float> *vertex_buffer;
-        UniformBuffer<float> *color_buffer;
-
-        BOOL initialized;
         VirGL::RESOURCE_CREATION *frag_shader_info;
         VirGL::RESOURCE_CREATION *vert_shader_info;
         VirGL::RESOURCE_CREATION *rasterizer_info;
         VirGL::RESOURCE_CREATION *blend_info;
         VirGL::RESOURCE_CREATION *vertex_elements_info;
+
+        VirGL::VirglCommandBuffer *command_buffer;
 
         OpenGLState();
         ~OpenGLState();
@@ -72,16 +64,16 @@ namespace State
     INT createDefaultBlend(VOID);
     INT createDefaultVertexElements(VOID);
 
-    INT loadDefaultFragmentShader(VirGL::VirglCommandBuffer& cmd);
-    INT loadDefaultVertexShader(VirGL::VirglCommandBuffer& cmd);
-    INT loadDefaultRasterizer(VirGL::VirglCommandBuffer& cmd);
-    INT loadDefaultBlend(VirGL::VirglCommandBuffer& cmd);
+    INT loadDefaultFragmentShader(VirGL::VirglCommandBuffer *cmd);
+    INT loadDefaultVertexShader(VirGL::VirglCommandBuffer *cmd);
+    INT loadDefaultRasterizer(VirGL::VirglCommandBuffer *cmd);
+    INT loadDefaultBlend(VirGL::VirglCommandBuffer *cmd);
     // INT loadDefaultVertexElement(VirGL::VirglCommandBuffer& cmd);
 
-    INT setDefaultPolygonStipple(VirGL::VirglCommandBuffer& cmd);
-    INT setDefaultScissorState(VirGL::VirglCommandBuffer& cmd);
-    INT setDefaultViewportState(VirGL::VirglCommandBuffer& cmd);
-    INT setDefaultFramebuffer(VirGL::VirglCommandBuffer& cmd);
+    INT setDefaultPolygonStipple(VirGL::VirglCommandBuffer *cmd);
+    INT setDefaultScissorState(VirGL::VirglCommandBuffer *cmd);
+    INT setDefaultViewportState(VirGL::VirglCommandBuffer *cmd);
+    INT setDefaultFramebuffer(VirGL::VirglCommandBuffer *cmd);
     // INT setDefaultConstantBuffers(VirGL::VirglCommandBuffer& cmd);
 
     CONST CHAR* errorToStr(INT error);

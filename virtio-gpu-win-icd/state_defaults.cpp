@@ -196,7 +196,7 @@ namespace State
         return STATUS_SUCCESS;
     }
 
-    static INT loadShader(VirGL::VirglCommandBuffer& cmd, UINT32 handle, SHADER_INFO *info)
+    static INT loadShader(VirGL::VirglCommandBuffer *cmd, UINT32 handle, SHADER_INFO *info)
     {
         TRACE_IN();
 
@@ -210,14 +210,14 @@ namespace State
         for (UINT32 i = 0; i < nb_cells; i++)
             create_info[i + 4] = info->tokens[i];
 
-        cmd.createObject(handle, VIRGL_OBJECT_SHADER, create_info);
-        cmd.bindShader(handle, info->type);
+        cmd->createObject(handle, VIRGL_OBJECT_SHADER, create_info);
+        cmd->bindShader(handle, info->type);
 
         TRACE_OUT();
         return STATUS_SUCCESS;
     }
 
-    INT loadDefaultFragmentShader(VirGL::VirglCommandBuffer& cmd)
+    INT loadDefaultFragmentShader(VirGL::VirglCommandBuffer *cmd)
     {
         TRACE_IN();
 
@@ -235,7 +235,7 @@ namespace State
         return res;
     }
 
-    INT loadDefaultVertexShader(VirGL::VirglCommandBuffer& cmd)
+    INT loadDefaultVertexShader(VirGL::VirglCommandBuffer *cmd)
     {
         TRACE_IN();
 
@@ -253,7 +253,7 @@ namespace State
         return res;
     }
 
-    INT loadDefaultRasterizer(VirGL::VirglCommandBuffer& cmd)
+    INT loadDefaultRasterizer(VirGL::VirglCommandBuffer *cmd)
     {
         TRACE_IN();
         UINT32 handle = DEFAULT_RASTERIZER_HANDLE;
@@ -284,14 +284,14 @@ namespace State
         create_info[6] = 0; // offset scale
         create_info[7] = 0; //offset clamp
 
-        cmd.createObject(handle, VIRGL_OBJECT_RASTERIZER, create_info);
-        cmd.bindObject(handle, VIRGL_OBJECT_RASTERIZER);
+        cmd->createObject(handle, VIRGL_OBJECT_RASTERIZER, create_info);
+        cmd->bindObject(handle, VIRGL_OBJECT_RASTERIZER);
 
         TRACE_OUT();
         return STATUS_SUCCESS;
     }
 
-    INT loadDefaultBlend(VirGL::VirglCommandBuffer& cmd)
+    INT loadDefaultBlend(VirGL::VirglCommandBuffer *cmd)
     {
         TRACE_IN();
 
@@ -310,8 +310,8 @@ namespace State
         create_info[1] = bitfield_2;
         create_info[2] = bitfield_3;
 
-        cmd.createObject(handle, VIRGL_OBJECT_BLEND, create_info);
-        cmd.bindObject(handle, VIRGL_OBJECT_BLEND);
+        cmd->createObject(handle, VIRGL_OBJECT_BLEND, create_info);
+        cmd->bindObject(handle, VIRGL_OBJECT_BLEND);
 
         TRACE_OUT();
         return STATUS_SUCCESS;
@@ -337,7 +337,7 @@ namespace State
     }
     */
 
-    INT setDefaultPolygonStipple(VirGL::VirglCommandBuffer& cmd)
+    INT setDefaultPolygonStipple(VirGL::VirglCommandBuffer *cmd)
     {
         TRACE_IN();
 
@@ -347,13 +347,13 @@ namespace State
         for (i = 0; i < 32; i++)
             params[i] = 0xffffffff;
 
-        cmd.setPolygonStipple(params);
+        cmd->setPolygonStipple(params);
 
         TRACE_OUT();
         return STATUS_SUCCESS;
     }
 
-    INT setDefaultScissorState(VirGL::VirglCommandBuffer& cmd)
+    INT setDefaultScissorState(VirGL::VirglCommandBuffer *cmd)
     {
         TRACE_IN();
 
@@ -365,13 +365,13 @@ namespace State
             params[i * 2 + 1] = 800 | (600 << 16);
         }
 
-        cmd.setScissorState(0, params);
+        cmd->setScissorState(0, params);
 
         TRACE_OUT();
         return STATUS_SUCCESS;
     }
 
-    INT setDefaultViewportState(VirGL::VirglCommandBuffer& cmd)
+    INT setDefaultViewportState(VirGL::VirglCommandBuffer *cmd)
     {
         TRACE_IN();
 
@@ -385,7 +385,7 @@ namespace State
         params[4] = 300.0f;
         params[5] = 0.5f;
 
-        cmd.setViewportState(0, params);
+        cmd->setViewportState(0, params);
 
         params.resize(6 * 15);
         for (i = 0; i < 16; i++) {
@@ -397,7 +397,7 @@ namespace State
             params[i * 6 + 5] = 0.5f;
         }
 
-        cmd.setViewportState(1, params);
+        cmd->setViewportState(1, params);
 
         //For some reasons, Mesa intializes the 16 scissors using two commands (1 + 15).
 
@@ -405,14 +405,14 @@ namespace State
         return STATUS_SUCCESS;
     }
 
-    INT setDefaultFramebuffer(VirGL::VirglCommandBuffer& cmd)
+    INT setDefaultFramebuffer(VirGL::VirglCommandBuffer *cmd)
     {
         TRACE_IN();
 
         std::vector<UINT32> handles(1);
         handles[0] = 2;
 
-        cmd.setFramebufferState(1, 0, handles);
+        cmd->setFramebufferState(1, 0, handles);
         TRACE_OUT();
         return STATUS_SUCCESS;
     }

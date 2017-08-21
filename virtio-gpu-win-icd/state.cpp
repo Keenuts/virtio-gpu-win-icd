@@ -47,13 +47,6 @@ namespace State
         clear_stencil = 0;
         memset(clear_color, 0, sizeof(clear_color));
 
-        framebuffer_id = 0;
-        frag_shader_id = 0;
-        vert_shader_id = 0;
-        rasterizer_id = 0;
-        blend_id = 0;
-
-        initialized = FALSE;
         frag_shader_info = NULL;
         vert_shader_info = NULL;
         rasterizer_info = NULL;
@@ -61,16 +54,11 @@ namespace State
         vertex_elements_info = NULL;
 
         restricted = FALSE;
-        vertex_buffer = NULL;
-        color_buffer = NULL;
+        command_buffer = new VirGL::VirglCommandBuffer(current_vgl_ctx);
     }
 
     OpenGLState::~OpenGLState()
     {
-        if (vertex_buffer)
-            delete vertex_buffer;
-        if (color_buffer)
-	        delete color_buffer;
     }
 
     VOID initializeState(VOID)
@@ -81,12 +69,25 @@ namespace State
 
     static VOID createVglCtx(VOID)
     {
+        UINT32 res = STATUS_SUCCESS;
+
         states[0] = new OpenGLState();
         current_vgl_ctx = DEFAULT_VGL_CTX;
         current_sub_ctx = 0;
 
         VirGL::createContext(DEFAULT_VGL_CTX);
         VirGL::attachResource(current_vgl_ctx, DEFAULT_FRAMEBUFFER_HANDLE);
+
+        res = createDefaultFragmentShader();
+        assert(res == STATUS_SUCCESS);
+        res = createDefaultVertexShader();
+        assert(res == STATUS_SUCCESS);
+        res = createDefaultRasterizer();
+        assert(res == STATUS_SUCCESS);
+        res = createDefaultBlend();
+        assert(res == STATUS_SUCCESS);
+        res = createDefaultVertexElements();
+        assert(res == STATUS_SUCCESS);
     }
 
     static VOID deleteVglCtx(VOID)
@@ -94,6 +95,38 @@ namespace State
         current_sub_ctx = 0;
         current_vgl_ctx = 0;
         VirGL::deleteContext(DEFAULT_VGL_CTX);
+    }
+
+    static VOID setupContextDefaults(VOID)
+    {
+        TRACE_IN();
+
+        INT res = 0;
+        VirGL::VirglCommandBuffer *cmd = states[current_sub_ctx]->command_buffer;
+
+        cmd->setCurrentSubContext(0);
+
+        std::vector<UINT32> args(4);
+        args[0] = 0x5;
+        args[1] = 0x1;
+        args[2] = 0x0;
+        args[3] = 0x0;
+        cmd->createObject(2, VIRGL_OBJECT_SURFACE, args);
+
+        args.resize(4);
+        args[0] = 0x0;
+        args[1] = 0x0;
+        args[2] = 0x0;
+        args[3] = 0x0;
+        cmd->createObject(3, VIRGL_OBJECT_DSA, args);
+        cmd->bindObject(3, VIRGL_OBJECT_DSA);
+
+        res = loadDefaultFragmentShader(cmd);
+        res = loadDefaultVertexShader(cmd);
+        res = loadDefaultRasterizer(cmd);
+        res = loadDefaultBlend(cmd);
+
+        TRACE_OUT();
     }
 
     INT createContext(UINT32 *id)
@@ -114,13 +147,15 @@ namespace State
 
         states[i] = new OpenGLState();
 
-        VirGL::VirglCommandBuffer cmd(current_vgl_ctx);
-        cmd.createSubContext(i);
-        cmd.setCurrentSubContext(i);
-        cmd.submitCommandBuffer();
+        VirGL::VirglCommandBuffer *cmd = states[i]->command_buffer;
+        cmd->createSubContext(i);
+        cmd->setCurrentSubContext(i);
+        cmd->submitCommandBuffer();
+
         current_sub_ctx = i;
         *id = i;
 
+        setupContextDefaults();
 
         TRACE_OUT();
         return STATUS_SUCCESS;
@@ -133,9 +168,8 @@ namespace State
         if (!states[id])
             return STATE_ERROR_INVALID_CONTEXT;
 
-        VirGL::VirglCommandBuffer cmd(current_vgl_ctx);
-        cmd.setCurrentSubContext(id);
-        cmd.submitCommandBuffer();
+        VirGL::VirglCommandBuffer *cmd = states[current_sub_ctx]->command_buffer;
+        cmd->setCurrentSubContext(id);
         current_sub_ctx = id;
 
         return STATUS_SUCCESS;
@@ -152,10 +186,13 @@ namespace State
         states[id] = NULL;
         current_sub_ctx = 0;
 
-        VirGL::VirglCommandBuffer cmd(current_vgl_ctx);
-        cmd.deleteSubContext(id);
-        cmd.setCurrentSubContext(0);
-        cmd.submitCommandBuffer();
+        VirGL::VirglCommandBuffer *cmd = states[current_sub_ctx]->command_buffer;
+
+        cmd->emptyCommandBuffer();
+
+        cmd->deleteSubContext(id);
+        cmd->setCurrentSubContext(0);
+        cmd->submitCommandBuffer();
 
         for (UINT32 i = 1; i < MAX_STATE_COUNT; i++)
             if (states[i])
@@ -179,15 +216,11 @@ namespace State
         if (states[current_sub_ctx]->restricted)
             return STATE_ERROR_NOT_ALLOWED;
 
-        if (!states[current_sub_ctx]->initialized)
-            return STATUS_SUCCESS;
+        VirGL::VirglCommandBuffer *cmd = states[current_sub_ctx]->command_buffer;
 
-        VirGL::VirglCommandBuffer cmd(current_vgl_ctx);
-
-        cmd.clear(states[current_sub_ctx]->clear_color,
+        cmd->clear(states[current_sub_ctx]->clear_color,
                   states[current_sub_ctx]->clear_depth,
                   states[current_sub_ctx]->clear_stencil);
-        cmd.submitCommandBuffer();
 
         return STATUS_SUCCESS;
     }
@@ -232,20 +265,6 @@ namespace State
 
         states[current_sub_ctx]->restricted = TRUE;
 
-        if (!states[current_sub_ctx]->vertex_buffer) {
-            states[current_sub_ctx]->vertex_buffer = new UniformBuffer<float>(current_vgl_ctx, DEFAULT_VERTEX_ELEMENTS_HANDLE, 0x10);
-            assert(states[current_sub_ctx]->vertex_buffer != NULL);
-        }
-        else
-            states[current_sub_ctx]->vertex_buffer->clear();
-
-        if (!states[current_sub_ctx]->color_buffer) {
-            states[current_sub_ctx]->color_buffer = new UniformBuffer<float>(current_vgl_ctx, DEFAULT_VERTEX_ELEMENTS_HANDLE, 0x10);
-            assert(states[current_sub_ctx]->color_buffer != NULL);
-        }
-        else
-            states[current_sub_ctx]->color_buffer->clear();
-
         return STATUS_SUCCESS;
     }
 
@@ -255,18 +274,18 @@ namespace State
         if (!states[current_sub_ctx]->restricted)
             return STATE_ERROR_NOT_ALLOWED;
 
-        states[current_sub_ctx]->vertex_buffer->push(v);
+        UNREFERENCED_PARAMETER(v);
 
         return STATUS_SUCCESS;
     }
 
-    INT push_color(float v)
+    INT push_color(float c)
     {
         CHECK_VALID_CTX(stages, current_sub_ctx);
         if (!states[current_sub_ctx]->restricted)
             return STATE_ERROR_NOT_ALLOWED;
 
-        states[current_sub_ctx]->color_buffer->push(v);
+        UNREFERENCED_PARAMETER(c);
 
         return STATUS_SUCCESS;
     }
@@ -289,61 +308,9 @@ namespace State
             return STATE_ERROR_NOT_ALLOWED;
 
         INT res = 0;
-        VirGL::VirglCommandBuffer cmd(current_vgl_ctx);
-        cmd.setCurrentSubContext(0);
+        VirGL::VirglCommandBuffer *cmd = states[current_sub_ctx]->command_buffer;
 
-        if (!states[current_sub_ctx]->initialized) {
-            std::vector<UINT32> args(4);
-            args[0] = 0x5;
-            args[1] = 0x1;
-            args[2] = 0x0;
-            args[3] = 0x0;
-            cmd.createObject(2, VIRGL_OBJECT_SURFACE, args);
-
-            args.resize(4);
-            args[0] = 0x0;
-            args[1] = 0x0;
-            args[2] = 0x0;
-            args[3] = 0x0;
-            cmd.createObject(3, VIRGL_OBJECT_DSA, args);
-            cmd.bindObject(3, VIRGL_OBJECT_DSA);
-            states[current_sub_ctx]->initialized = TRUE;
-        }
-
-        if (states[current_sub_ctx]->frag_shader_info == NULL) {
-            res = createDefaultFragmentShader();
-            assert(res == STATUS_SUCCESS);
-            res = loadDefaultFragmentShader(cmd);
-
-        }
-        assert(res == STATUS_SUCCESS);
-
-        if (states[current_sub_ctx]->vert_shader_info == NULL) {
-            res = createDefaultVertexShader();
-            assert(res == STATUS_SUCCESS);
-            res = loadDefaultVertexShader(cmd);
-        }
-        assert(res == STATUS_SUCCESS);
-
-        if (states[current_sub_ctx]->rasterizer_info == NULL) {
-            res = createDefaultRasterizer();
-            assert(res == STATUS_SUCCESS);
-            res = loadDefaultRasterizer(cmd);
-        }
-        assert(res == STATUS_SUCCESS);
-
-        if (states[current_sub_ctx]->blend_info == NULL) {
-            res = createDefaultBlend();
-            assert(res == STATUS_SUCCESS);
-            res = loadDefaultBlend(cmd);
-        }
-        assert(res == STATUS_SUCCESS);
-
-        if (states[current_sub_ctx]->vertex_elements_info == NULL)
-            res = createDefaultVertexElements();
-        assert(res == STATUS_SUCCESS);
-
-        res = cmd.submitCommandBuffer();
+        res = cmd->submitCommandBuffer();
         assert(res == STATUS_SUCCESS);
         return STATUS_SUCCESS;
     }

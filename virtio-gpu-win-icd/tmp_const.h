@@ -355,7 +355,7 @@ namespace TmpConst
     };
 
 
-    const FLOAT constant_buffer[]{
+    const FLOAT constant_buffer[] = {
         0.696364f,
         0.369616f,
         0.615192f,

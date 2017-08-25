@@ -93,7 +93,8 @@ namespace VirGL
         VOID setScissorState(UINT32 start_slot, std::vector<UINT32>& extremums);
         VOID setPolygonStipple(std::vector<UINT32>& stipple);
         VOID setFramebufferState(UINT32 nb_cbuf, UINT32 zsurf_handle, std::vector<UINT32>& surf_handles);
-        VOID setConstantBuffer(UINT32 shader_type, UINT32 index, std::vector<float> constants);
+        VOID setConstantBuffer(UINT32 shader_type, UINT32 index,
+                               std::vector<FLOAT> constants);
 
         VOID inlineWrite(INLINE_WRITE data);
 
@@ -102,7 +103,7 @@ namespace VirGL
 
     };
 
-    VOID printHost(const char* message);
+    VOID printHost(CONST CHAR* message);
 
     VOID createContext(UINT32 vgl_ctx);
     VOID deleteContext(UINT32 vgl_ctx);

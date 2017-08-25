@@ -20,7 +20,6 @@ namespace State
         current_sub_ctx = 0;
 
         VirGL::createContext(current_vgl_ctx);
-        VirGL::attachResource(current_vgl_ctx, WINDOWS_FRAMEBUFFER_HANDLE);
     }
 
     static VOID deleteVglCtx(VOID)
@@ -42,14 +41,43 @@ namespace State
         VirGL::attachResource(current_vgl_ctx, st->frag_shader_info.handle);
 
         st->surface_info = { 0 };
-        st->surface_info.handle = WINDOWS_FRAMEBUFFER_HANDLE;
 
-        st->depth_buffer_info = create3DResource(2, 0x11, 1, 300, 300);
+#define USE_WINDOWS_BUFFER 1
+#if USE_WINDOWS_BUFFER
+        st->surface_info.handle = WINDOWS_FRAMEBUFFER_HANDLE;
+#else
+        st->surface_info = create3DResource(
+            PIPE_TEXTURE_2D,
+            VIRGL_FORMAT_B8G8R8A8_UNORM,
+            VREND_RES_BIND_SAMPLER_VIEW | VREND_RES_BIND_RENDER_TARGET | (1 << 18),
+            300,
+            300
+        );
+#endif
+
+        VirGL::attachResource(current_vgl_ctx, st->surface_info.handle);
+        VirGL::attachResource(current_vgl_ctx, WINDOWS_FRAMEBUFFER_HANDLE);
+
+        //2 0x11 1
+        st->depth_buffer_info = create3DResource(
+            PIPE_TEXTURE_2D,
+            VIRGL_FORMAT_S8_UINT_Z24_UNORM,
+            VREND_RES_BIND_DEPTH_STENCIL,
+            300,
+            300
+        );
         VirGL::attachResource(current_vgl_ctx, st->depth_buffer_info.handle);
 
         //  Create Framebuffer 3D object
-        st->framebuffer_handle = createSurface(st->surface_info.handle, 0x2);
-        st->depth_buffer_handle = createSurface(st->depth_buffer_info.handle, 0x11);
+        st->framebuffer_handle = createSurface(
+            st->surface_info.handle,
+            VIRGL_FORMAT_B8G8R8A8_UNORM
+        );
+
+        st->depth_buffer_handle = createSurface(
+            st->depth_buffer_info.handle,
+            VIRGL_FORMAT_S8_UINT_Z24_UNORM
+        );
 
         // Unknown resources. Dummy
         st->unknown_res_info_0 = create3DResource(0, 0x40, 0x20000, 8, 1, 1, 0);

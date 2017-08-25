@@ -255,3 +255,6 @@ paket-files/
 *.lib
 *.bin
 __pycache__
+
+.*.swp
+tags

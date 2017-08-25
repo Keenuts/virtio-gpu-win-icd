@@ -8,57 +8,45 @@
 #include "virgl_command.h"
 #include "win_types.h"
 
-
 namespace State
 {
     UINT32 current_sub_ctx;
     UINT32 current_vgl_ctx;
     OpenGLState *states[MAX_STATE_COUNT];
 
-    enum StateError {
-        STATE_ERROR_INVALID_ID = 1,
-        STATE_ERROR_CONTEXT_EXISTS,
-        STATE_ERROR_CANNOT_ALLOC_CONTEXT,
-        STATE_ERROR_INVALID_CONTEXT,
-        STATE_ERROR_INVALID_CURRENT_CONTEXT,
-        STATE_ERROR_NOT_ALLOWED,
-    };
-
-    CONST CHAR* errorToStr(INT error)
-    {
-#define ERRTOSTR(Error) case Error: return #Error
-        switch (error)
-        {
-        ERRTOSTR(STATUS_SUCCESS);
-        ERRTOSTR(STATE_ERROR_INVALID_ID);
-        ERRTOSTR(STATE_ERROR_CONTEXT_EXISTS);
-        ERRTOSTR(STATE_ERROR_CANNOT_ALLOC_CONTEXT);
-        ERRTOSTR(STATE_ERROR_INVALID_CONTEXT);
-        ERRTOSTR(STATE_ERROR_INVALID_CURRENT_CONTEXT);
-        ERRTOSTR(STATE_ERROR_NOT_ALLOWED);
-        default:
-            return "UNKNOWN";
-        }
-#undef ERRTOSTR
-    }
-
     OpenGLState::OpenGLState()
     {
+        restricted = FALSE;
+
+        resource_index = 3;
+        object_index = 1;
+
+        memset(clear_color, 0, sizeof(clear_color));
         clear_depth = 1.0;
         clear_stencil = 0;
-        memset(clear_color, 0, sizeof(clear_color));
 
-        frag_shader_info = NULL;
-        vert_shader_info = NULL;
-        rasterizer_info = NULL;
-        blend_info = NULL;
-        vertex_elements_info = NULL;
+        vertex_buffer_info = { 0 };
+        surface_info = { 0 };
+        depth_buffer_info = { 0 };
 
-        restricted = FALSE;
-        command_buffer = new VirGL::VirglCommandBuffer(current_vgl_ctx);
+        unknown_res_info_0 = { 0 };
+        unknown_res_info_2 = { 0 };
+
+        frag_shader_info = { 0 };
+        vert_shader_info = { 0 };
+
+        framebuffer_handle = 0;
+        frag_shader_handle = 0;
+        vert_shader_handle = 0;
+        DSA_handle = 0;
+        rasterizer_handle = 0;
+        blend_handle = 0;
+        vertex_elements_handle = 0;
 
         vbos = new std::vector<VBO_ENTRY>();
         vbo_descriptors = new std::vector<VBO_DESCRIPTOR>();
+
+        command_buffer = new VirGL::VirglCommandBuffer(current_vgl_ctx);
     }
 
     OpenGLState::~OpenGLState()
@@ -71,150 +59,13 @@ namespace State
         DbgPrint(TRACE_LEVEL_INFO, ("[*] Initializing state tracker.\n"));
     }
 
-    static VOID createVglCtx(VOID)
-    {
-        UINT32 res = STATUS_SUCCESS;
-
-        states[0] = new OpenGLState();
-        current_vgl_ctx = DEFAULT_VGL_CTX;
-        current_sub_ctx = 0;
-
-        VirGL::createContext(DEFAULT_VGL_CTX);
-        VirGL::attachResource(current_vgl_ctx, DEFAULT_FRAMEBUFFER_HANDLE);
-
-        res = createDefaultFragmentShader();
-        assert(res == STATUS_SUCCESS);
-        res = createDefaultVertexShader();
-        assert(res == STATUS_SUCCESS);
-        res = createDefaultRasterizer();
-        assert(res == STATUS_SUCCESS);
-        res = createDefaultBlend();
-        assert(res == STATUS_SUCCESS);
-        res = createDefaultVertexElements();
-        assert(res == STATUS_SUCCESS);
-    }
-
-    static VOID deleteVglCtx(VOID)
-    {
-        current_sub_ctx = 0;
-        current_vgl_ctx = 0;
-        VirGL::deleteContext(DEFAULT_VGL_CTX);
-    }
-
-    static VOID setupContextDefaults(VOID)
-    {
-        TRACE_IN();
-
-        INT res = 0;
-        VirGL::VirglCommandBuffer *cmd = states[current_sub_ctx]->command_buffer;
-
-        cmd->setCurrentSubContext(0);
-
-        std::vector<UINT32> args(4);
-        args[0] = 0x5;
-        args[1] = 0x1;
-        args[2] = 0x0;
-        args[3] = 0x0;
-        cmd->createObject(2, VIRGL_OBJECT_SURFACE, args);
-
-        args.resize(4);
-        args[0] = 0x0;
-        args[1] = 0x0;
-        args[2] = 0x0;
-        args[3] = 0x0;
-        cmd->createObject(3, VIRGL_OBJECT_DSA, args);
-        cmd->bindObject(3, VIRGL_OBJECT_DSA);
-
-        res = loadDefaultFragmentShader(cmd);
-        res = loadDefaultVertexShader(cmd);
-        res = loadDefaultRasterizer(cmd);
-        res = loadDefaultBlend(cmd);
-
-        TRACE_OUT();
-    }
-
-    INT createContext(UINT32 *id)
-    {
-        TRACE_IN();
-        assert(id);
-
-        UINT32 i;
-        for (i = 1; i < MAX_STATE_COUNT; i++)
-            if (!states[i])
-                break;
-
-        if (i >= MAX_STATE_COUNT)
-            return STATE_ERROR_CANNOT_ALLOC_CONTEXT;
-
-        if (current_vgl_ctx == 0)
-            createVglCtx();
-
-        states[i] = new OpenGLState();
-
-        VirGL::VirglCommandBuffer *cmd = states[i]->command_buffer;
-        cmd->createSubContext(i);
-        cmd->setCurrentSubContext(i);
-        cmd->submitCommandBuffer();
-
-        current_sub_ctx = i;
-        *id = i;
-
-        setupContextDefaults();
-
-        TRACE_OUT();
-        return STATUS_SUCCESS;
-    }
-
-    INT makeCurrent(UINT32 id)
-    {
-        if (id >= MAX_STATE_COUNT)
-            return STATE_ERROR_INVALID_ID;
-        if (!states[id])
-            return STATE_ERROR_INVALID_CONTEXT;
-
-        VirGL::VirglCommandBuffer *cmd = states[current_sub_ctx]->command_buffer;
-        cmd->setCurrentSubContext(id);
-        current_sub_ctx = id;
-
-        return STATUS_SUCCESS;
-    }
-
-    INT deleteContext(UINT32 id)
-    {
-        if (id == 0 || id >= MAX_STATE_COUNT)
-            return STATE_ERROR_INVALID_ID;
-        if (!states[id])
-            return STATE_ERROR_INVALID_CONTEXT;
-
-        delete states[id];
-        states[id] = NULL;
-        current_sub_ctx = 0;
-
-        VirGL::VirglCommandBuffer *cmd = states[current_sub_ctx]->command_buffer;
-
-        cmd->emptyCommandBuffer();
-
-        cmd->deleteSubContext(id);
-        cmd->setCurrentSubContext(0);
-        cmd->submitCommandBuffer();
-
-        for (UINT32 i = 1; i < MAX_STATE_COUNT; i++)
-            if (states[i])
-                return STATUS_SUCCESS;
-
-        deleteVglCtx();
-        return STATUS_SUCCESS;
-    }
-
 #define CHECK_VALID_CTX(States, Current_sub_ctx)        \
     do {                                                \
-        if (current_sub_ctx == 0)                       \
-            return STATE_ERROR_INVALID_CURRENT_CONTEXT; \
         if (!states[current_sub_ctx])                   \
             return STATE_ERROR_INVALID_CURRENT_CONTEXT; \
     } while (0)
 
-    INT clear(VOID)
+    INT clear(UINT32 mask)
     {
         CHECK_VALID_CTX(stages, current_sub_ctx);
         if (states[current_sub_ctx]->restricted)
@@ -222,7 +73,8 @@ namespace State
 
         VirGL::VirglCommandBuffer *cmd = states[current_sub_ctx]->command_buffer;
 
-        cmd->clear(states[current_sub_ctx]->clear_color,
+        cmd->clear(mask,
+                  states[current_sub_ctx]->clear_color,
                   states[current_sub_ctx]->clear_depth,
                   states[current_sub_ctx]->clear_stencil);
 
@@ -261,7 +113,21 @@ namespace State
         return STATUS_SUCCESS;
     }
 
-    INT begin(VOID)
+    INT viewport(UINT32 x, UINT32 y, UINT32 width, UINT32 height)
+    {
+        CHECK_VALID_CTX(stages, current_sub_ctx);
+        if (states[current_sub_ctx]->restricted)
+            return STATE_ERROR_NOT_ALLOWED;
+
+        UNREFERENCED_PARAMETER(x);
+        UNREFERENCED_PARAMETER(y);
+        UNREFERENCED_PARAMETER(width);
+        UNREFERENCED_PARAMETER(height);
+
+        return STATUS_SUCCESS;
+    }
+
+    INT begin(UINT32 mode)
     {
         CHECK_VALID_CTX(stages, current_sub_ctx);
         if (states[current_sub_ctx]->restricted)
@@ -269,28 +135,7 @@ namespace State
 
         states[current_sub_ctx]->restricted = TRUE;
 
-        return STATUS_SUCCESS;
-    }
-
-    INT push_vertex(float v)
-    {
-        CHECK_VALID_CTX(stages, current_sub_ctx);
-        if (!states[current_sub_ctx]->restricted)
-            return STATE_ERROR_NOT_ALLOWED;
-
-        UNREFERENCED_PARAMETER(v);
-
-        return STATUS_SUCCESS;
-    }
-
-    INT push_color(float c)
-    {
-        CHECK_VALID_CTX(stages, current_sub_ctx);
-        if (!states[current_sub_ctx]->restricted)
-            return STATE_ERROR_NOT_ALLOWED;
-
-        UNREFERENCED_PARAMETER(c);
-
+        UNREFERENCED_PARAMETER(mode);
         return STATUS_SUCCESS;
     }
 
@@ -304,6 +149,16 @@ namespace State
         return STATUS_SUCCESS;
     }
 
+    INT enable(UINT32 cap)
+    {
+        CHECK_VALID_CTX(stages, current_sub_ctx);
+        if (states[current_sub_ctx]->restricted)
+            return STATE_ERROR_NOT_ALLOWED;
+
+        UNREFERENCED_PARAMETER(cap);
+
+        return STATUS_SUCCESS;
+    }
 
     INT flush(VOID)
     {
@@ -332,7 +187,7 @@ namespace State
             VBO_ENTRY entry = { 0 };
             entry.valid = TRUE;
 
-            entry.res_handle = DEFAULT_VERTEX_BUFFER_HANDLE;
+            entry.res_handle = states[current_sub_ctx]->vertex_buffer_info.handle;
             entry.size = 0;
             entry.enabled = FALSE;
             entry.created = FALSE;
@@ -358,37 +213,35 @@ namespace State
         return STATUS_SUCCESS;
     }
 
-    static INT retreiveCurrentVBO(UINT32 *handle)
+    static VBO_ENTRY* retreiveCurrentVBO(VOID)
     {
-
         std::vector<VBO_ENTRY> *vbos = states[current_sub_ctx]->vbos;
-        UINT32 current = (UINT32)-1;
         UINT32 i;
 
-        assert(handle);
-
-        for (i = 0; i < vbos->size(); i++) {
-            if ((*vbos)[i].enabled) {
-                current = i;
+        for (i = 0; i < vbos->size(); i++)
+            if ((*vbos)[i].enabled)
                 break;
-            }
-        }
 
-        if (current >= vbos->size() || !(*vbos)[current].valid)
-            return STATUS_INVALID_HANDLE;
-        *handle = current;
-        return STATUS_SUCCESS;
+        if (i >= vbos->size() || !(*vbos)[i].valid)
+            return NULL;
+        return &vbos->data()[i];
     }
 
     INT BufferData(UINT32 target, UINT32 size, CONST VOID *data, UINT32 usage)
     {
-        std::vector<VBO_ENTRY> *vbos = states[current_sub_ctx]->vbos;
-        UINT current;
-        UINT32 res = retreiveCurrentVBO(&current);
-        if (res != STATUS_SUCCESS)
-            return res;
+        OpenGLState *st = states[current_sub_ctx];
+        VBO_ENTRY *vbo = retreiveCurrentVBO();
+        if (vbo == NULL)
+            return STATE_ERROR_INVALID_VBO;
 
-        (*vbos)[current].size = size;
+        vbo->size = size;
+        if (!vbo->created) {
+
+            st->vertex_buffer_info = create3DResource(0, 0x40, 0x10, size);
+            VirGL::attachResource(current_vgl_ctx, st->vertex_buffer_info.handle);
+            vbo->created = TRUE;
+            vbo->res_handle = st->vertex_buffer_info.handle;
+        }
 
         UNREFERENCED_PARAMETER(data);
         UNREFERENCED_PARAMETER(usage);
@@ -399,16 +252,16 @@ namespace State
 
     INT BufferSubData(UINT32 target, UINT32 offset, UINT32 size, CONST VOID *data)
     {
-        std::vector<VBO_ENTRY> *vbos = states[current_sub_ctx]->vbos;
-        VirGL::VirglCommandBuffer *cmd = states[current_sub_ctx]->command_buffer;
+        OpenGLState *st = states[current_sub_ctx];
+        VBO_ENTRY *vbo = retreiveCurrentVBO();
+        VirGL::VirglCommandBuffer *cmd = st->command_buffer;
         VirGL::INLINE_WRITE info = { 0 };
-        UINT current;
-        UINT32 res = retreiveCurrentVBO(&current);
-        if (res != STATUS_SUCCESS)
-            return res;
 
-        info.handle = (*vbos)[current].res_handle;
-        info.data = (VOID*)data;
+        if (vbo == NULL)
+            return STATE_ERROR_INVALID_VBO;
+
+        info.handle = vbo->res_handle;
+        info.data = (VOID*)(data);
         info.data_len = size;
         info.x = offset;
         info.width = size;
@@ -416,17 +269,15 @@ namespace State
         info.depth = 1;
         info.usage = size;
 
-        cmd->setCurrentSubContext(0);
+        cmd->setCurrentSubContext(current_sub_ctx);
         cmd->inlineWrite(info);
         cmd->submitCommandBuffer();
 
-        UNREFERENCED_PARAMETER(data);
         UNREFERENCED_PARAMETER(target);
-
         return STATUS_SUCCESS;
     }
 
-    static UINT32 sizeFromType(UINT32 type)
+    static UINT32 strideFromType(UINT32 type)
     {
         if (type == GL_FLOAT)
             return sizeof(FLOAT);
@@ -441,23 +292,32 @@ namespace State
         return 1;
     }
 
-    INT VertexAttribPointer(UINT32 index, UINT32 size, UINT32 type, BOOLEAN normalized, UINT32 stride, CONST VOID *pointer)
+    INT VertexAttribPointer(UINT32 index, UINT32 size, UINT32 type, BOOLEAN normalized,
+                            UINT32 stride, CONST VOID *pointer)
     {
-        std::vector<VBO_DESCRIPTOR> *descriptors = states[current_sub_ctx]->vbo_descriptors;
+        OpenGLState *st = states[current_sub_ctx];
+        std::vector<VBO_DESCRIPTOR> *dc = st->vbo_descriptors;
+        VBO_ENTRY *vbo = retreiveCurrentVBO();
         VBO_DESCRIPTOR descriptor = { 0 };
-        UINT current;
-        UINT32 res = retreiveCurrentVBO(&current);
-        if (res != STATUS_SUCCESS)
-            return res;
+        UINT32 i;
+
+        if (vbo == NULL)
+            return STATE_ERROR_INVALID_VBO;
 
         descriptor.valid = TRUE;
-        descriptor.offset = (UINT32)(UINT64)pointer;
-        descriptor.res_handle = states[current_sub_ctx]->vbos->data()[current].res_handle;
-        descriptor.stride = size * sizeFromType(type);
+        descriptor.offset = static_cast<UINT32>(reinterpret_cast<UINT64>(pointer));
+        descriptor.res_handle = vbo->res_handle;
+        descriptor.stride = size * strideFromType(type);
 
-        if ((UINT32)descriptors->size() < index + 1)
-            descriptors->resize(index + 1);
-        descriptors->data()[index] = descriptor;
+        if ((UINT32)dc->size() < index + 1) {
+            i = (UINT32)dc->size();
+            dc->resize(index + 1);
+
+            for (; i < dc->size(); i++)
+                (*dc)[i].valid = FALSE;
+        }
+
+        dc->data()[index] = descriptor;
 
         UNREFERENCED_PARAMETER(stride);
         UNREFERENCED_PARAMETER(normalized);
@@ -466,10 +326,81 @@ namespace State
 
     INT EnableVertexAttribArray(UINT32 index)
     {
-        std::vector<VBO_DESCRIPTOR> *descriptors = states[current_sub_ctx]->vbo_descriptors;
-        if ((UINT32)descriptors->size() < index + 1 || !(*descriptors)[index].valid)
-            return STATUS_INVALID_HANDLE;
-        (*descriptors)[index].enabled = TRUE;
+        std::vector<VBO_DESCRIPTOR> *dc = states[current_sub_ctx]->vbo_descriptors;
+
+        if ((UINT32)dc->size() < index + 1 || !(*dc)[index].valid)
+            return STATE_ERROR_INVALID_INDEX;
+        (*dc)[index].enabled = TRUE;
+
+        return STATUS_SUCCESS;
+    }
+
+    static INT CreateVertexElements()
+    {
+        OpenGLState *st = states[current_sub_ctx];
+        std::vector<VBO_DESCRIPTOR> *dc = st->vbo_descriptors;
+        VirGL::VirglCommandBuffer *cmd = st->command_buffer;
+        UINT32 i;
+
+        std::vector<UINT32> args(dc->size() * 4);
+
+        for (i = 0; i < dc->size(); i++) {
+                args[i * 4 + 0] = 0;
+                args[i * 4 + 1] = 0;
+                args[i * 4 + 2] = i;
+                args[i * 4 + 3] = 0x1e;
+        }
+
+        st->vertex_elements_handle = createObject(VIRGL_OBJECT_VERTEX_ELEMENTS, args);
+        cmd->bindObject(st->vertex_elements_handle, VIRGL_OBJECT_VERTEX_ELEMENTS);
+
+        return STATUS_SUCCESS;
+    }
+
+    INT DrawArrays(UINT32 mode, UINT32 first, UINT32 count)
+    {
+        INT res;
+        UINT32 i;
+        OpenGLState *st = states[current_sub_ctx];
+        VirGL::VirglCommandBuffer *cmd = st->command_buffer;
+        std::vector<VBO_DESCRIPTOR> *dc = st->vbo_descriptors;
+        std::vector<VirGL::VBO_SETTINGS> params(dc->size());
+        VirGL::DRAW_VBO_SETTINGS settings = { 0 };
+
+        if (st->vertex_elements_handle == 0) {
+            res = CreateVertexElements();
+            if (res != STATUS_SUCCESS)
+                return res;
+        }
+
+        for (i = 0; i < dc->size(); i++) {
+            if (!(*dc)[i].valid) {
+                DbgPrint(TRACE_LEVEL_ERROR, ("[!] Invalid descriptor found !\n"));
+                return STATE_ERROR_INVALID_VBO;
+            }
+        }
+
+        for (i = 0; i < dc->size(); i++) {
+            VirGL::VBO_SETTINGS s = { 0 };
+            s.handle = (*dc)[i].res_handle;
+            s.offset = (*dc)[i].offset;
+            s.stride = (*dc)[i].stride;
+            params[i] = s;
+        }
+
+        cmd->setVBO(params);
+
+        settings.start = first;
+        settings.count = count;
+        settings.mode = mode;
+        settings.indexed = 0;
+        settings.instance_count = 1;
+        settings.min_index = first;
+        settings.max_index = first + count - 1;
+
+        cmd->drawVBO(settings);
+        cmd->submitCommandBuffer();
+
         return STATUS_SUCCESS;
     }
 }

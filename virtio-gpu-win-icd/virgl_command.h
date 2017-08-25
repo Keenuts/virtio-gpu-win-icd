@@ -8,7 +8,7 @@
 
 namespace VirGL
 {
-    typedef struct _VBO_SETTINGS {
+    typedef struct _DRAW_VBO_SETTINGS {
         UINT32 indexed;
         UINT32 mode;
         UINT32 start;
@@ -24,6 +24,12 @@ namespace VirGL
         UINT32 primitive_restart;
         UINT32 restart_index;
         UINT32 cso;
+    } DRAW_VBO_SETTINGS, *PDRAW_VBO_SETTINGS;
+
+    typedef struct _VBO_SETTINGS {
+        UINT32 stride;
+        UINT32 offset;
+        UINT32 handle;
     } VBO_SETTINGS, *PVBO_SETTINGS;
 
 #define VIRTIO_GPU_RESOURCE_FLAG_Y_0_TOP (1 << 0)
@@ -74,10 +80,12 @@ namespace VirGL
         VOID setCurrentSubContext(UINT32 sub_ctx);
         VOID deleteSubContext(UINT32 sub_ctx);
 
-        VOID clear(FLOAT rgba[4], double depth, UINT32 stencil);
+        VOID clear(UINT32 mask, FLOAT rgba[4], double depth, UINT32 stencil);
         VOID setViewportState(FLOAT scale[3], FLOAT translation[3]);
 
         VOID createObject(UINT32 handle, UINT32 type, std::vector<UINT32>& args);
+        VOID deleteObject(UINT32 handle, UINT32 type);
+
         VOID bindObject(UINT32 handle, UINT32 type);
         VOID bindShader(UINT32 handle, UINT32 type);
         VOID setViewportState(UINT32 start_slot, std::vector<FLOAT>& values);
@@ -89,7 +97,8 @@ namespace VirGL
 
         VOID inlineWrite(INLINE_WRITE data);
 
-        VOID drawVBO(VBO_SETTINGS vbo);
+        VOID setVBO(std::vector<VBO_SETTINGS>& vbo);
+        VOID drawVBO(DRAW_VBO_SETTINGS vbo);
 
     };
 

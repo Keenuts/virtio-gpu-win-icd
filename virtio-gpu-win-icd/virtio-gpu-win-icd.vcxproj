@@ -36,6 +36,8 @@
     <ClCompile Include="driver_api.cpp" />
     <ClCompile Include="opengl32.cpp" />
     <ClCompile Include="state.cpp" />
+    <ClCompile Include="state_context.cpp" />
+    <ClCompile Include="state_helpers.cpp" />
     <ClCompile Include="state_defaults.cpp" />
     <ClCompile Include="tests.cpp" />
     <ClCompile Include="virgl_command.cpp" />

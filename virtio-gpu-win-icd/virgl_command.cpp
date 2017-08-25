@@ -23,10 +23,55 @@ namespace VirGL
         : m_ctx_id(vgl_ctx), m_total_size(0), m_commands()
     { }
 
+    static const char* cmd2str(UINT32 cmd) {
+#define CMDTOSTR(Cmd) if ((cmd & 0xff) == Cmd) return #Cmd
+
+        CMDTOSTR(VIRGL_CCMD_NOP);
+        CMDTOSTR(VIRGL_CCMD_CREATE_OBJECT);
+        CMDTOSTR(VIRGL_CCMD_BIND_OBJECT);
+        CMDTOSTR(VIRGL_CCMD_DESTROY_OBJECT);
+        CMDTOSTR(VIRGL_CCMD_SET_VIEWPORT_STATE);
+        CMDTOSTR(VIRGL_CCMD_SET_FRAMEBUFFER_STATE);
+        CMDTOSTR(VIRGL_CCMD_SET_VERTEX_BUFFERS);
+        CMDTOSTR(VIRGL_CCMD_CLEAR);
+        CMDTOSTR(VIRGL_CCMD_DRAW_VBO);
+        CMDTOSTR(VIRGL_CCMD_RESOURCE_INLINE_WRITE);
+        CMDTOSTR(VIRGL_CCMD_SET_SAMPLER_VIEWS);
+        CMDTOSTR(VIRGL_CCMD_SET_INDEX_BUFFER);
+        CMDTOSTR(VIRGL_CCMD_SET_CONSTANT_BUFFER);
+        CMDTOSTR(VIRGL_CCMD_SET_STENCIL_REF);
+        CMDTOSTR(VIRGL_CCMD_SET_BLEND_COLOR);
+        CMDTOSTR(VIRGL_CCMD_SET_SCISSOR_STATE);
+        CMDTOSTR(VIRGL_CCMD_BLIT);
+        CMDTOSTR(VIRGL_CCMD_RESOURCE_COPY_REGION);
+        CMDTOSTR(VIRGL_CCMD_BIND_SAMPLER_STATES);
+        CMDTOSTR(VIRGL_CCMD_BEGIN_QUERY);
+        CMDTOSTR(VIRGL_CCMD_END_QUERY);
+        CMDTOSTR(VIRGL_CCMD_GET_QUERY_RESULT);
+        CMDTOSTR(VIRGL_CCMD_SET_POLYGON_STIPPLE);
+        CMDTOSTR(VIRGL_CCMD_SET_CLIP_STATE);
+        CMDTOSTR(VIRGL_CCMD_SET_SAMPLE_MASK);
+        CMDTOSTR(VIRGL_CCMD_SET_STREAMOUT_TARGETS);
+        CMDTOSTR(VIRGL_CCMD_SET_RENDER_CONDITION);
+        CMDTOSTR(VIRGL_CCMD_SET_UNIFORM_BUFFER);
+        CMDTOSTR(VIRGL_CCMD_SET_SUB_CTX);
+        CMDTOSTR(VIRGL_CCMD_CREATE_SUB_CTX);
+        CMDTOSTR(VIRGL_CCMD_DESTROY_SUB_CTX);
+        CMDTOSTR(VIRGL_CCMD_BIND_SHADER);
+
+#undef CMDTOSTR
+        return "UNKNOWN";
+    }
+
     INT VirglCommandBuffer::submitCommandBuffer(VOID)
     {
         TRACE_IN();
-        DbgPrint(TRACE_LEVEL_INFO, ("[?] submit cmd buffer\n"));
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] submit cmd buffer [%llu]\n", m_total_size / sizeof(UINT32)));
+
+        for (UINT32 i = 0; i < m_commands.size(); i++) {
+            VirGL::GPU_3D_CMD cmd = m_commands[i].first;
+            DbgPrint(TRACE_LEVEL_INFO, ("\tCMD[%d] %s\n", i, cmd2str(cmd)));
+        }
 
         if (m_total_size == 0)
             return STATUS_SUCCESS;
@@ -125,7 +170,7 @@ namespace VirGL
     }
 
 
-    VOID VirglCommandBuffer::clear(FLOAT rgba[4], double depth, UINT32 stencil)
+    VOID VirglCommandBuffer::clear(UINT32 mask, FLOAT rgba[4], double depth, UINT32 stencil)
     {
         TRACE_IN();
         DbgPrint(TRACE_LEVEL_INFO, ("[?] Clear\n"));
@@ -134,10 +179,9 @@ namespace VirGL
         std::vector<UINT32> params;
 
         head = createHeader(VIRGL_CCMD_CLEAR, 0, 8);
-        UINT32 buf_idx = 0;
 
         params.resize(8);
-        memcpy(params.data(), &buf_idx, sizeof(UINT32));
+        memcpy(params.data(), &mask, sizeof(UINT32));
         memcpy(params.data() + 1, rgba, sizeof(FLOAT) * 4);
         memcpy(params.data() + 5, &depth, sizeof(UINT64));
         memcpy(params.data() + 7, &stencil, sizeof(UINT32));
@@ -172,6 +216,8 @@ namespace VirGL
     {
         TRACE_IN();
 
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] set scissor state\n"));
+
         assert(extremums.size() % 2 == 0);
         if (extremums.size() == 0)
             return;
@@ -186,12 +232,16 @@ namespace VirGL
         for (UINT32 i = 0; i < (UINT32)extremums.size(); i++)
             params[i + 1] = extremums[i];
 
+        m_commands.push_back(std::pair<GPU_3D_CMD, std::vector<UINT32>>(head, params));
+        m_total_size += sizeof(head) + sizeof(UINT32) * LENGTH_FROM_HEADER(head);
+
         TRACE_OUT();
     }
 
     VOID VirglCommandBuffer::setPolygonStipple(std::vector<UINT32>& stipple)
     {
         TRACE_IN();
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] set polygon stipple\n"));
 
         assert(stipple.size() == 32);
 
@@ -222,6 +272,24 @@ namespace VirGL
         params[0] = handle;
         for (UINT32 i = 0; i < args.size(); i++)
             params[i + 1] = args[i];
+
+        m_commands.push_back(std::pair<GPU_3D_CMD, std::vector<UINT32>>(head, params));
+        m_total_size += sizeof(head) + sizeof(UINT32) * LENGTH_FROM_HEADER(head);
+
+        TRACE_OUT();
+    }
+
+    VOID VirglCommandBuffer::deleteObject(UINT32 handle, UINT32 type)
+    {
+        TRACE_IN();
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] Delete object 0x%x of type 0x%x\n", handle, type));
+
+        GPU_3D_CMD head = { 0 };
+        const UINT32 length = 1;
+
+        std::vector<UINT32> params(length);
+        head = createHeader(VIRGL_CCMD_DESTROY_OBJECT, type, length);
+        params[0] = handle;
 
         m_commands.push_back(std::pair<GPU_3D_CMD, std::vector<UINT32>>(head, params));
         m_total_size += sizeof(head) + sizeof(UINT32) * LENGTH_FROM_HEADER(head);
@@ -280,8 +348,7 @@ namespace VirGL
 
 		head = createHeader(VIRGL_CCMD_SET_VIEWPORT_STATE, 0, length);
 		params[0] = start_slot;
-		for (UINT32 i = 0; i < (UINT32)values.size(); i++)
-			params[i + 1] = (UINT32)values[i];
+        memcpy(params.data() + 1, values.data(), values.size() * sizeof(FLOAT));
 
         m_commands.push_back(std::pair<GPU_3D_CMD, std::vector<UINT32>>(head, params));
         m_total_size += sizeof(head) + sizeof(UINT32) * LENGTH_FROM_HEADER(head);
@@ -294,7 +361,7 @@ namespace VirGL
 		TRACE_IN();
 
 		assert(surf_handles.size() == nb_cbuf);
-        DbgPrint(TRACE_LEVEL_INFO, ("[?] Franebuffer setting for %u viewports\n", (UINT32)surf_handles.size()));
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] Framebuffer setting for %u viewports\n", (UINT32)surf_handles.size()));
 
 		GPU_3D_CMD head = { 0 };
 		const UINT32 length = 2 + (UINT32)surf_handles.size();
@@ -367,7 +434,31 @@ namespace VirGL
         TRACE_OUT();
     }
 
-    VOID VirglCommandBuffer::drawVBO(VBO_SETTINGS vbo)
+    VOID VirglCommandBuffer::setVBO(std::vector<VBO_SETTINGS>& vbo)
+    {
+        TRACE_IN();
+
+        DbgPrint(TRACE_LEVEL_INFO, ("[?] Setting up a VBO\n"));
+
+		GPU_3D_CMD head = { 0 };
+		const UINT32 length = (UINT32)vbo.size() * 3;
+		std::vector<UINT32> params(length);
+        UINT32 i;
+
+		head = createHeader(VIRGL_CCMD_SET_VERTEX_BUFFERS, 0, length);
+        for (i = 0; i < vbo.size(); i++) {
+            params[i * 3 + 0] = vbo[i].stride;
+            params[i * 3 + 1] = vbo[i].offset;
+            params[i * 3 + 2] = vbo[i].handle;
+        }
+
+        m_commands.push_back(std::pair<GPU_3D_CMD, std::vector<UINT32>>(head, params));
+        m_total_size += sizeof(head) + sizeof(UINT32) * LENGTH_FROM_HEADER(head);
+
+		TRACE_OUT();
+    }
+
+    VOID VirglCommandBuffer::drawVBO(DRAW_VBO_SETTINGS vbo)
     {
         TRACE_IN();
 

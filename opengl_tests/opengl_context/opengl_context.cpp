@@ -12,7 +12,8 @@
 #include <assert.h>
 
 #define POLL 1
-#define ENABLE_VBO 0
+#define ENABLE_VBO 1
+#define RENDER_ITERATIONS 0xf
 
 static const GLfloat vertices[] = {
     // front
@@ -118,7 +119,7 @@ display()
 {
     /* rotate a triangle around */
     glClearColor(0.0, 0.5, 0.5, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
 
 #if ENABLE_VBO
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -281,11 +282,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     glBufferSubData(GL_ARRAY_BUFFER, color_offset, sizeof(colors), &colors[0]);
     glBufferSubData(GL_ARRAY_BUFFER, normals_offset, sizeof(normals), &normals[0]);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid*)(intptr_t)position_offset);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0,
+                          (const GLvoid*)(intptr_t)position_offset);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid*)(intptr_t)color_offset);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0,
+                          (const GLvoid*)(intptr_t)normals_offset);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (const GLvoid*)(intptr_t)normals_offset);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0,
+                          (const GLvoid*)(intptr_t)color_offset);
     glEnableVertexAttribArray(2);
 #endif
 
@@ -293,7 +297,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 #if POLL
     UNREFERENCED_PARAMETER(msg);
-    for (UINT32 i = 0; i < 0xff; i++)
+    for (UINT32 i = 0; i < RENDER_ITERATIONS; i++)
         display();
 #else
     while (GetMessage(&msg, hWnd, 0, 0)) {

@@ -33,6 +33,8 @@ typedef VOID(*PFN_GLBUFFERSUBDATA)(GLenum target, GLintptr offset, GLsizeiptr si
 typedef VOID(*PFN_GLVERTEXATTRIBPOINTER)(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid * pointer);
 typedef VOID(*PFN_GLENABLEVERTEXATTRIBARRAY)(GLuint index);
 
+#define BUG_ON(Condition) do { assert(Condition); } while(0)
+
 template<typename PFUNC>
 static PFUNC getOpenGLFunction(HMODULE lib, LPCSTR procName)
 {
@@ -43,10 +45,9 @@ static PFUNC getOpenGLFunction(HMODULE lib, LPCSTR procName)
 static void glBindAttribLocation(GLuint program, GLuint index, const GLchar *name)
 {
     HMODULE h = LoadLibrary(L"opengl32.dll");
-    assert(h);
-    
+    BUG_ON(h != NULL);
     PFN_GLBINDATTRIBLOCATION func = getOpenGLFunction<PFN_GLBINDATTRIBLOCATION>(h, "glBindAttribLocation");
-    assert(func);
+    BUG_ON(func != NULL);
 
     func(program, index, name);
 }
@@ -54,53 +55,53 @@ static void glBindAttribLocation(GLuint program, GLuint index, const GLchar *nam
 static void glGenBuffers(GLsizei n, GLuint *buffers)
 {
     HMODULE h = LoadLibrary(L"opengl32.dll");
-    assert(h);
+    BUG_ON(h);
     PFN_GLGENBUFFERS func = getOpenGLFunction<PFN_GLGENBUFFERS>(h, "glGenBuffers");
-    assert(func);
+    BUG_ON(func);
     func(n, buffers);
 }
 
 static void glBindBuffer(GLenum target, GLuint buffer)
 {
     HMODULE h = LoadLibrary(L"opengl32.dll");
-    assert(h);
+    BUG_ON(h);
     PFN_GLBINDBUFFER func = getOpenGLFunction<PFN_GLBINDBUFFER>(h, "glBindBuffer");
-    assert(func);
+    BUG_ON(func);
     func(target, buffer);
 }
 
 static void glBufferData(GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage)
 {
     HMODULE h = LoadLibrary(L"opengl32.dll");
-    assert(h);
+    BUG_ON(h);
     PFN_GLBUFFERDATA func = getOpenGLFunction<PFN_GLBUFFERDATA>(h, "glBufferData");
-    assert(func);
+    BUG_ON(func);
     func(target, size, data, usage);
 }
 
 static void glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid *data)
 {
     HMODULE h = LoadLibrary(L"opengl32.dll");
-    assert(h);
+    BUG_ON(h);
     PFN_GLBUFFERSUBDATA func = getOpenGLFunction<PFN_GLBUFFERSUBDATA>(h, "glBufferSubData");
-    assert(func);
+    BUG_ON(func);
     func(target, offset, size, data);
 }
 
 static void glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid * pointer)
 {
     HMODULE h = LoadLibrary(L"opengl32.dll");
-    assert(h);
+    BUG_ON(h);
     PFN_GLVERTEXATTRIBPOINTER func = getOpenGLFunction<PFN_GLVERTEXATTRIBPOINTER>(h, "glVertexAttribPointer");
-    assert(func);
+    BUG_ON(func);
     func(index, size, type, normalized, stride, pointer);
 }
 
 static void glEnableVertexAttribArray(GLuint index)
 {
     HMODULE h = LoadLibrary(L"opengl32.dll");
-    assert(h);
+    BUG_ON(h);
     PFN_GLENABLEVERTEXATTRIBARRAY func = getOpenGLFunction<PFN_GLENABLEVERTEXATTRIBARRAY>(h, "glEnableVertexAttribArray");
-    assert(func);
+    BUG_ON(func);
     func(index);
 }

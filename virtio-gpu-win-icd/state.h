@@ -8,7 +8,7 @@
 
 #define MAX_STATE_COUNT 3
 
-#define DEFAULT_VGL_CTX 1
+#define DEFAULT_VGL_CTX 2
 #define WINDOWS_FRAMEBUFFER_HANDLE 1
 
 namespace State

@@ -20,6 +20,7 @@ namespace State
         current_sub_ctx = 0;
 
         VirGL::createContext(current_vgl_ctx);
+        VirGL::attachResource(current_vgl_ctx, WINDOWS_FRAMEBUFFER_HANDLE);
     }
 
     static VOID deleteVglCtx(VOID)
@@ -27,6 +28,7 @@ namespace State
         current_sub_ctx = 0;
         current_vgl_ctx = 0;
 
+        VirGL::detachResource(current_vgl_ctx, WINDOWS_FRAMEBUFFER_HANDLE);
         VirGL::deleteContext(current_vgl_ctx);
     }
 

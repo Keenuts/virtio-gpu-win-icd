@@ -98,7 +98,7 @@ namespace State
 
         SET_BIT_AT(bitfield1, 1, 1); //Enable depth clip
         SET_BIT_AT(bitfield1, 1, 7); //point quad rasterization
-        SET_BIT_AT(bitfield1, 1, 9); //Fill front
+        SET_BIT_AT(bitfield1, 1, 8); //Fill front
         SET_BIT_AT(bitfield1, 1, 15); //offset_line
         SET_BIT_AT(bitfield1, 1, 29); // ??
         SET_BIT_AT(bitfield1, 1, 30); // ??

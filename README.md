@@ -1,3 +1,14 @@
+# See https://github.com/virtio-win/kvm-guest-drivers-windows/pull/943
+
+This is an old repository, made as a PoC back in 2017. This "worked" at the time as is it
+built, and was able to execute some form of 3D acceleration using Virtio-GPU (not integrated
+with the window manager).
+
+I haven't worked on VirtIO-GPU since 2018, and thus have no idea what the latest progress are.
+But it seems the most recent/promising work is https://github.com/virtio-win/kvm-guest-drivers-windows/pull/943
+So I'd encourage you to go see this work instead of this outdated repository. 😊
+
+
 # Windows ICD for Qemu/KVM
 
 Proof of concept repo for an OpenGL ICD.
